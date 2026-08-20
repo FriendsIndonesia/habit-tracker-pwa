@@ -1,8 +1,14 @@
 const SPREADSHEET_NAME = "Habit Tracker Backend";
 const OWNER_EMAIL = "friendsindonesia28@gmail.com";
-const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "state_saved", "password_recovery_requested", "otp_whatsapp_requested", "user_registered_otp_verified"];
+const DEFAULT_INVITE_CODES = ["MARKAZ2026", "HABIT2026", "MDD-ACCESS-2026"];
+const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "state_saved", "password_recovery_requested", "invite_codes", "invite_code_checked", "user_registered_invite_verified"];
 
-function doGet() {
+function doGet(event) {
+  const params = event && event.parameter ? event.parameter : {};
+  if (params.action === "validate_invite") {
+    const result = validateInvitationCode(params.code || "", params.email || "");
+    return jsonResponse(result, params.callback);
+  }
   return jsonResponse({
     ok: true,
     app: "Habit Tracker",
@@ -29,28 +35,50 @@ function doPost(event) {
       sendPasswordRecoveryEmail(body.payload || {});
     }
 
-    if (body.action === "otp_whatsapp_requested") {
-      notifyOwnerForWhatsAppOtp(body.payload || {});
-    }
-
     return jsonResponse({ ok: true, action: body.action || "state_saved" });
   } catch (error) {
     return jsonResponse({ ok: false, error: error.message });
   }
 }
 
-function notifyOwnerForWhatsAppOtp(payload) {
-  if (!payload.phone || !payload.otpCode) return;
-  MailApp.sendEmail({
-    to: OWNER_EMAIL,
-    subject: "OTP WhatsApp Habit Tracker",
-    body:
-      "Permintaan OTP WhatsApp baru.\n\n" +
-      "Nomor WhatsApp: " + payload.phone + "\n" +
-      "Email: " + (payload.email || "-") + "\n" +
-      "Kode OTP: " + payload.otpCode + "\n\n" +
-      "Catatan: hubungkan Apps Script ke provider WhatsApp Business API agar OTP terkirim otomatis ke pengguna."
-  });
+function validateInvitationCode(code, email) {
+  const normalizedCode = String(code || "").trim().toUpperCase();
+  const validCodes = getInvitationCodes();
+  const match = validCodes.find((item) => item.code === normalizedCode && item.active);
+  const result = {
+    ok: true,
+    valid: Boolean(match),
+    owner: match ? match.owner : "",
+    message: match ? "Kode undangan valid." : "Kode undangan tidak valid atau tidak aktif."
+  };
+  getOrCreateSheet("invite_code_checked").appendRow([
+    new Date().toISOString(),
+    OWNER_EMAIL,
+    "apps-script",
+    "",
+    "invite_code_checked",
+    JSON.stringify([{ id: "register", label: "Register" }]),
+    JSON.stringify({ email, code: normalizedCode, valid: result.valid, owner: result.owner })
+  ]);
+  return result;
+}
+
+function getInvitationCodes() {
+  const sheet = getOrCreateSheet("invite_codes");
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["code", "active", "owner", "note"]);
+  }
+  if (sheet.getLastRow() === 1) {
+    DEFAULT_INVITE_CODES.forEach((code) => sheet.appendRow([code, true, "Markaz Dakwah Digital", "Kode awal admin"]));
+  }
+  const rows = sheet.getDataRange().getValues().slice(1);
+  return rows
+    .map((row) => ({
+      code: String(row[0] || "").trim().toUpperCase(),
+      active: row[1] === true || String(row[1]).toLowerCase() === "true" || String(row[1]).toLowerCase() === "active",
+      owner: row[2] || "Admin"
+    }))
+    .filter((item) => item.code);
 }
 
 function sendPasswordRecoveryEmail(payload) {
@@ -74,7 +102,12 @@ function setupHabitTrackerBackend() {
   TABLES.forEach((name) => {
     const sheet = getOrCreateSheet(name);
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["created_at", "workspace_account", "source", "active_route", "action", "menu_items_json", "payload_json"]);
+      if (name === "invite_codes") {
+        sheet.appendRow(["code", "active", "owner", "note"]);
+        DEFAULT_INVITE_CODES.forEach((code) => sheet.appendRow([code, true, "Markaz Dakwah Digital", "Kode awal admin"]));
+      } else {
+        sheet.appendRow(["created_at", "workspace_account", "source", "active_route", "action", "menu_items_json", "payload_json"]);
+      }
     }
   });
   return spreadsheet.getUrl();
@@ -94,8 +127,14 @@ function getOrCreateSheet(name) {
   return spreadsheet.getSheetByName(safeName) || spreadsheet.insertSheet(safeName);
 }
 
-function jsonResponse(data) {
+function jsonResponse(data, callback) {
+  const json = JSON.stringify(data);
+  if (callback) {
+    return ContentService
+      .createTextOutput(callback + "(" + json + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
   return ContentService
-    .createTextOutput(JSON.stringify(data))
+    .createTextOutput(json)
     .setMimeType(ContentService.MimeType.JSON);
 }
