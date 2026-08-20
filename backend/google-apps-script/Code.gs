@@ -1,6 +1,6 @@
 const SPREADSHEET_NAME = "Habit Tracker Backend";
 const OWNER_EMAIL = "friendsindonesia28@gmail.com";
-const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots"];
+const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "password_recovery_requested"];
 
 function doGet() {
   return jsonResponse({
@@ -22,10 +22,30 @@ function doPost(event) {
       JSON.stringify(body.payload || {})
     ]);
 
+    if (body.action === "password_recovery_requested") {
+      sendPasswordRecoveryEmail(body.payload || {});
+    }
+
     return jsonResponse({ ok: true, action: body.action || "state_saved" });
   } catch (error) {
     return jsonResponse({ ok: false, error: error.message });
   }
+}
+
+function sendPasswordRecoveryEmail(payload) {
+  const email = payload.email;
+  if (!email) return;
+  const code = Utilities.getUuid().slice(0, 8).toUpperCase();
+  MailApp.sendEmail({
+    to: email,
+    subject: "Pemulihan Password Habit Tracker",
+    body:
+      "Assalamu'alaikum.\n\n" +
+      "Kami menerima permintaan pemulihan password untuk akun Habit Tracker kamu.\n\n" +
+      "Kode pemulihan sementara: " + code + "\n\n" +
+      "Jika kamu tidak meminta pemulihan ini, abaikan email ini.\n\n" +
+      "Developed by Markaz Dakwah Digital"
+  });
 }
 
 function setupHabitTrackerBackend() {
