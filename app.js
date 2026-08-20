@@ -345,6 +345,9 @@ function syncWithGoogleWorkspace(action, payload) {
     body: JSON.stringify({
       action,
       workspaceAccount: appConfig.workspaceAccount,
+      source: "habit-tracker-pwa",
+      activeRoute: state.route,
+      menuItems: navItems.map(([id, label]) => ({ id, label })),
       payload,
       sentAt: new Date().toISOString()
     })
@@ -353,8 +356,14 @@ function syncWithGoogleWorkspace(action, payload) {
 
 function navigate(route) {
   state.route = route;
+  document.body.classList.remove("mobile-nav-open");
   saveState();
   render();
+}
+
+function toggleMobileNav(force) {
+  const shouldOpen = typeof force === "boolean" ? force : !document.body.classList.contains("mobile-nav-open");
+  document.body.classList.toggle("mobile-nav-open", shouldOpen);
 }
 
 function toast(message) {
@@ -522,6 +531,19 @@ function toggleHabit(id) {
   saveState();
   render();
   toast(habit.completed ? `${habit.name} selesai. Amal kecil yang dijaga akan membentuk sistem besar.` : "Terlewat hari ini. Tidak apa-apa, lanjutkan besok.");
+}
+
+function deleteHabit(id) {
+  const habit = state.habits.find((item) => item.id === id);
+  state.habits = state.habits.filter((item) => item.id !== id);
+  state.logs.unshift({
+    habitId: id,
+    date: new Date().toISOString(),
+    status: `Dihapus: ${habit?.name || "Aktivitas"}`
+  });
+  saveState();
+  render();
+  toast(`${habit?.name || "Aktivitas"} dihapus dari daftar hari ini.`);
 }
 
 const quickAddConfig = {
@@ -920,8 +942,8 @@ function shell(content) {
         <div class="logo-lockup">
           <img src="./assets/logo.png" alt="Habit Tracker logo">
           <div>
-            <p class="brand-title">HABIT</p>
-            <span class="brand-subtitle">Tracker</span>
+            <p class="brand-title">Habit Tracker</p>
+            <span class="brand-subtitle">Better Life</span>
           </div>
         </div>
         <nav class="nav-list" aria-label="Main navigation">
@@ -933,11 +955,21 @@ function shell(content) {
         ${topHeader()}
         ${content}
       </section>
+      <button class="mobile-menu-button" onclick="toggleMobileNav()" aria-label="Buka menu navigasi"><span>☰</span> Menu</button>
       <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-head">
+          <div>
+            <strong>Habit Tracker</strong>
+            <small>Menu utama</small>
+          </div>
+          <button class="mobile-nav-close" onclick="toggleMobileNav(false)" aria-label="Tutup menu">×</button>
+        </div>
         ${navItems
-          .map(([id, label]) => `<button class="${state.route === id ? "active" : ""}" onclick="navigate('${id}')">${label}</button>`)
+          .map(([id, label, icon]) => `<button class="${state.route === id ? "active" : ""}" onclick="navigate('${id}')"><span>${icon}</span>${label}</button>`)
           .join("")}
+        <p class="developer-credit">Developed by Markaz Dakwah Digital</p>
       </nav>
+      <div class="mobile-nav-scrim" onclick="toggleMobileNav(false)"></div>
     </main>
   `;
 }
@@ -1030,7 +1062,8 @@ function dashboardView() {
   `);
 }
 
-function habitList(habits) {
+function habitList(habits, options = {}) {
+  const { deletable = false } = options;
   return habits
     .map(
       (habit) => `
@@ -1041,6 +1074,7 @@ function habitList(habits) {
           <div class="muted">${habit.area} • ${timeLabel(habit.time)} • ${habit.target}</div>
         </div>
         <span class="badge">${habit.streak} hari</span>
+        ${deletable ? `<button class="delete-activity-button" onclick="deleteHabit('${habit.id}')" aria-label="Hapus ${escapeHtml(habit.name)}">&#128465;</button>` : ""}
       </div>
     `
     )
@@ -1086,7 +1120,7 @@ function todayView() {
               <button class="btn small" onclick="addActivity('${group}')">+ Tambahkan Aktivitas</button>
             </div>
             ${suggestionList(group)}
-            ${habitList(state.habits.filter((habit) => habit.time === group))}
+            ${habitList(state.habits.filter((habit) => habit.time === group), { deletable: true })}
           </section>
         `
         )
@@ -1518,12 +1552,14 @@ window.togglePasswordVisibility = togglePasswordVisibility;
 window.recoverPassword = recoverPassword;
 window.completeOnboarding = completeOnboarding;
 window.toggleHabit = toggleHabit;
+window.deleteHabit = deleteHabit;
 window.addQuick = addQuick;
 window.submitQuickAdd = submitQuickAdd;
 window.closeQuickAdd = closeQuickAdd;
 window.addActivity = addActivity;
 window.applySuggestion = applySuggestion;
 window.deleteSuggestion = deleteSuggestion;
+window.toggleMobileNav = toggleMobileNav;
 window.triggerAvatarUpload = triggerAvatarUpload;
 window.uploadAvatar = uploadAvatar;
 
