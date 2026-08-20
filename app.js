@@ -1,4 +1,4 @@
-const storageKey = "habit-tracker-phase1-state-id-islamic-v2";
+const storageKey = "habit-tracker-phase1-state-id-islamic-v3-clean";
 const appConfig = window.HABIT_TRACKER_CONFIG || {};
 
 const navItems = [
@@ -77,220 +77,18 @@ const demoState = {
   otp: null,
   avatarUrl: "",
   onboardingDone: false,
-  selectedAreas: ["Ibadah & Spiritual", "Kesehatan", "Ilmu, Akhlak & Pengembangan Diri"],
-  vision: "Menjadi pribadi muslim yang lebih sehat, disiplin, amanah, dan bermanfaat.",
-  goals: [
-    {
-      id: "goal-health",
-      name: "Menjaga Kesehatan sebagai Amanah",
-      area: "Kesehatan",
-      why: "Agar badan lebih kuat untuk ibadah, keluarga, dakwah, dan bekerja dengan amanah.",
-      target: 100,
-      current: 72,
-      unit: "%",
-      deadline: "2026-12-31",
-      status: "Active"
-    },
-    {
-      id: "goal-productivity",
-      name: "Lebih Produktif dan Tertib",
-      area: "Bisnis & Produktivitas",
-      why: "Menata waktu agar pekerjaan, keluarga, dan ibadah berjalan lebih seimbang.",
-      target: 100,
-      current: 68,
-      unit: "%",
-      deadline: "2026-11-30",
-      status: "Active"
-    },
-    {
-      id: "goal-learning",
-      name: "Istiqamah Menuntut Ilmu",
-      area: "Ilmu, Akhlak & Pengembangan Diri",
-      why: "Menambah ilmu yang bermanfaat dan menguatkan amal harian.",
-      target: 100,
-      current: 81,
-      unit: "%",
-      deadline: "2026-10-31",
-      status: "Active"
-    }
-  ],
-  systems: [
-    {
-      id: "system-health",
-      goalId: "goal-health",
-      name: "Sistem Hidup Sehat",
-      purpose: "Menjaga tubuh sebagai amanah melalui rutinitas kecil yang konsisten.",
-      status: "Good"
-    },
-    {
-      id: "system-productivity",
-      goalId: "goal-productivity",
-      name: "Sistem Amanah Harian",
-      purpose: "Niatkan, rencanakan, kerjakan, lalu muhasabah.",
-      status: "Good"
-    }
-  ],
-  habits: [
-    {
-      id: "habit-water",
-      name: "Minum Air Cukup",
-      area: "Kesehatan",
-      goalId: "goal-health",
-      systemId: "system-health",
-      time: "Morning",
-      streak: 14,
-      target: "8 glasses",
-      completed: true
-    },
-    {
-      id: "habit-plan",
-      name: "Niat & Rencana Pagi",
-      area: "Bisnis & Produktivitas",
-      goalId: "goal-productivity",
-      systemId: "system-productivity",
-      time: "Morning",
-      streak: 9,
-      target: "10 minutes",
-      completed: true
-    },
-    {
-      id: "habit-walk",
-      name: "Jalan Kaki 30 Menit",
-      area: "Kesehatan",
-      goalId: "goal-health",
-      systemId: "system-health",
-      time: "Afternoon",
-      streak: 6,
-      target: "30 minutes",
-      completed: false
-    },
-    {
-      id: "habit-reading",
-      name: "Membaca Ilmu Bermanfaat",
-      area: "Ilmu, Akhlak & Pengembangan Diri",
-      goalId: "goal-learning",
-      systemId: "system-productivity",
-      time: "Evening",
-      streak: 12,
-      target: "20 pages",
-      completed: true
-    },
-    {
-      id: "habit-deep-work",
-      name: "Fokus Menunaikan Amanah",
-      area: "Bisnis & Produktivitas",
-      goalId: "goal-productivity",
-      systemId: "system-productivity",
-      time: "Afternoon",
-      streak: 7,
-      target: "90 minutes",
-      completed: true
-    },
-    {
-      id: "habit-review",
-      name: "Muhasabah Harian",
-      area: "Ilmu, Akhlak & Pengembangan Diri",
-      goalId: "goal-productivity",
-      systemId: "system-productivity",
-      time: "Evening",
-      streak: 4,
-      target: "5 minutes",
-      completed: false
-    }
-  ],
+  selectedAreas: [],
+  vision: "",
+  goals: [],
+  systems: [],
+  habits: [],
   logs: [],
-  impacts: [
-    {
-      title: "Energi Pagi Lebih Stabil",
-      area: "Kesehatan",
-      evidence: "Minum Air Cukup selesai 14 hari beruntun; skor kebiasaan pagi hari ini 100%.",
-      result: "Lebih siap memulai ibadah dan pekerjaan tanpa rasa lemas."
-    },
-    {
-      title: "Fokus Kerja Meningkat",
-      area: "Bisnis & Produktivitas",
-      evidence: "Fokus Menunaikan Amanah selesai hari ini dengan streak 7 hari.",
-      result: "Tugas penting lebih cepat selesai sebelum sore."
-    },
-    {
-      title: "Ilmu Lebih Terjaga",
-      area: "Ilmu, Akhlak & Pengembangan Diri",
-      evidence: "Membaca Ilmu Bermanfaat selesai hari ini dengan streak 12 hari.",
-      result: "Ada catatan faedah baru untuk diamalkan dan dibagikan."
-    }
-  ],
-  journalEntries: [
-    {
-      title: "Syukur Hari Ini",
-      mood: "Tenang",
-      body: "Alhamdulillah, hari ini bisa menjaga rencana pagi dan membaca ilmu bermanfaat.",
-      lesson: "Kebiasaan kecil lebih mudah dijaga ketika dimulai setelah Subuh."
-    },
-    {
-      title: "Tantangan",
-      mood: "Perlu diperbaiki",
-      body: "Jalan kaki sore belum selesai karena agenda kerja mundur.",
-      lesson: "Aktivitas kesehatan perlu dipasang sebelum agenda sore yang padat."
-    }
-  ],
-  achievements: [
-    {
-      title: "14 Hari Istiqamah Minum Air",
-      type: "Streak",
-      detail: "Kebiasaan Minum Air Cukup mencapai streak 14 hari.",
-      earnedAt: "20 Agustus 2026"
-    },
-    {
-      title: "Pembaca Ilmu Konsisten",
-      type: "Milestone",
-      detail: "Membaca Ilmu Bermanfaat mencapai streak 12 hari.",
-      earnedAt: "20 Agustus 2026"
-    },
-    {
-      title: "Amanah Harian Terjaga",
-      type: "Badge",
-      detail: "Fokus Menunaikan Amanah selesai hari ini dan masuk 3 habit terkuat.",
-      earnedAt: "20 Agustus 2026"
-    }
-  ],
-  insights: [
-    {
-      title: "Pagi adalah waktu terkuat",
-      signal: "Habit pagi selesai 2 dari 2.",
-      advice: "Letakkan aktivitas terpenting setelah Subuh atau awal pagi."
-    },
-    {
-      title: "Sore perlu buffer",
-      signal: "Jalan Kaki 30 Menit belum selesai.",
-      advice: "Beri pengingat lebih awal atau pecah menjadi 2 sesi 15 menit."
-    },
-    {
-      title: "Ilmu dan produktivitas saling menguatkan",
-      signal: "Membaca dan fokus kerja sama-sama selesai hari ini.",
-      advice: "Jaga urutan: niat pagi, fokus kerja, lalu catat faedah malam."
-    }
-  ],
-  settingsNotes: [
-    {
-      title: "Backend Google Workspace aktif",
-      detail: "Data tersinkron ke akun friendsindonesia28@gmail.com melalui Apps Script."
-    },
-    {
-      title: "Mode PWA aktif",
-      detail: "Aplikasi sudah dipublikasikan lewat GitHub Pages dan dapat dipasang di perangkat."
-    }
-  ],
-  reviews: [
-    {
-      month: "August 2026",
-      completion: 78,
-      strongest: "Membaca Ilmu Bermanfaat",
-      weakest: "Jalan Kaki 30 Menit",
-      gratitude: "Masih diberi kesempatan memperbaiki amanah tubuh dan waktu.",
-      improvement: "Jadwalkan jalan kaki sebelum pekerjaan sore menumpuk.",
-      tomorrow: "Mulai dengan minum air, niat pagi, lalu 15 menit jalan kaki."
-    }
-  ]
+  impacts: [],
+  journalEntries: [],
+  achievements: [],
+  insights: [],
+  settingsNotes: [],
+  reviews: []
 };
 
 let state = loadState();
@@ -476,11 +274,29 @@ function primaryArea() {
 
 function todayScore() {
   const completed = state.habits.filter((habit) => habit.completed).length;
+  const total = state.habits.length;
   return {
     completed,
-    total: state.habits.length,
-    score: Math.round((completed / state.habits.length) * 100)
+    total,
+    score: total ? Math.round((completed / total) * 100) : 0
   };
+}
+
+function averageSystemScore() {
+  return state.systems.length ? Math.round(state.systems.reduce((sum, system) => sum + systemScore(system.id), 0) / state.systems.length) : 0;
+}
+
+function averageGoalProgress() {
+  return state.goals.length ? Math.round(state.goals.reduce((sum, goal) => sum + Number(goal.current || 0), 0) / state.goals.length) : 0;
+}
+
+function emptyState(message, action = "") {
+  return `
+    <div class="empty-state">
+      <p>${escapeHtml(message)}</p>
+      ${action}
+    </div>
+  `;
 }
 
 function strongestHabit() {
@@ -825,7 +641,7 @@ function submitQuickAdd(event, type) {
   if (type === "System") {
     state.systems.unshift({
       id: `system-${Date.now()}`,
-      goalId: state.goals[0]?.id || "goal-health",
+      goalId: state.goals[0]?.id || "",
       name,
       purpose: "Dibuat dari Quick Add.",
       status: "Needs Attention"
@@ -836,8 +652,8 @@ function submitQuickAdd(event, type) {
       id: `habit-${Date.now()}`,
       name,
       area: primaryArea(),
-      goalId: state.goals[0]?.id || "goal-health",
-      systemId: state.systems[0]?.id || "system-health",
+      goalId: state.goals[0]?.id || "",
+      systemId: state.systems[0]?.id || "",
       time: "Morning",
       streak: 0,
       target: "Daily",
@@ -903,8 +719,8 @@ function addActivity(time) {
     id: `habit-${Date.now()}`,
     name,
     area: selected,
-    goalId: state.goals[0]?.id || "goal-health",
-    systemId: state.systems[0]?.id || "system-health",
+    goalId: state.goals[0]?.id || "",
+    systemId: state.systems[0]?.id || "",
     time,
     streak: 0,
     target: "Hari ini",
@@ -942,8 +758,8 @@ function applySuggestion(time, area, name) {
     id: `habit-${Date.now()}`,
     name,
     area,
-    goalId: state.goals[0]?.id || "goal-health",
-    systemId: state.systems[0]?.id || "system-health",
+    goalId: state.goals[0]?.id || "",
+    systemId: state.systems[0]?.id || "",
     time,
     streak: 0,
     target: "Hari ini",
@@ -1160,7 +976,7 @@ function dashboardView() {
       <div class="row-between">
         <div>
           <h2>Scoring Analytics</h2>
-          <p class="muted">Histogram, line chart, pie 3D, dan tabel skor langsung menjelaskan progres hari ini.</p>
+          <p class="muted">${state.habits.length ? "Histogram, line chart, pie 3D, dan tabel skor langsung menjelaskan progres hari ini." : "Data analitik akan muncul setelah kamu membuat dan mencentang aktivitas."}</p>
         </div>
         <button class="btn primary" onclick="downloadDashboardPdf()">Download Pdf</button>
       </div>
@@ -1178,7 +994,7 @@ function dashboardView() {
             <h2>Skor Hari Ini</h2>
             <p class="muted">${score.completed} dari ${score.total} aktivitas terselesaikan.</p>
           </div>
-          <span class="badge">Istiqamah: 14 hari</span>
+          <span class="badge">Istiqamah: ${strongestHabit()?.streak || 0} hari</span>
         </div>
         <div class="score-ring" style="--score:${score.score}%"><strong>${score.score}%</strong></div>
         <div class="quick-add">
@@ -1187,15 +1003,15 @@ function dashboardView() {
       </section>
       <section class="panel insight-panel-3d">
         <h2>Insight Hari Ini</h2>
-        <p class="muted">Kamu lebih konsisten menyelesaikan kebiasaan penting setelah niat dan rencana pagi.</p>
+        <p class="muted">${state.habits.length ? "Insight akan mengikuti pola kebiasaan yang kamu kerjakan." : "Belum ada insight karena belum ada aktivitas yang dicatat."}</p>
         <div class="heatmap" aria-label="Monthly consistency heatmap">
           ${Array.from({ length: 42 }, (_, index) => `<span class="heat-cell level-${(index + score.completed) % 4}"></span>`).join("")}
         </div>
       </section>
     </div>
     <div class="grid three-grid" style="margin-top:1rem">
-      <section class="metric-card"><span class="muted">Skor Sistem</span><strong>${Math.round(state.systems.reduce((sum, system) => sum + systemScore(system.id), 0) / state.systems.length)}%</strong></section>
-      <section class="metric-card"><span class="muted">Progres Tujuan</span><strong>${Math.round(state.goals.reduce((sum, goal) => sum + goal.current, 0) / state.goals.length)}%</strong></section>
+      <section class="metric-card"><span class="muted">Skor Sistem</span><strong>${averageSystemScore()}%</strong></section>
+      <section class="metric-card"><span class="muted">Progres Tujuan</span><strong>${averageGoalProgress()}%</strong></section>
       <section class="metric-card"><span class="muted">Progres Bulanan</span><strong>${score.score}%</strong></section>
     </div>
     <section class="panel analytics-panel" style="margin-top:1rem">
@@ -1214,7 +1030,7 @@ function dashboardView() {
       </section>
       <section class="panel">
         <h2>Tujuan Aktif</h2>
-        ${state.goals.slice(0, 3).map(goalCard).join("")}
+        ${state.goals.length ? state.goals.slice(0, 3).map(goalCard).join("") : emptyState("Belum ada tujuan. Buat tujuan pertamamu dari tombol Quick Add atau proses onboarding.")}
       </section>
     </div>
   `);
@@ -1222,6 +1038,7 @@ function dashboardView() {
 
 function habitList(habits, options = {}) {
   const { deletable = false } = options;
+  if (!habits.length) return emptyState("Belum ada aktivitas atau kebiasaan yang dibuat.");
   return habits
     .map(
       (habit) => `
@@ -1333,15 +1150,12 @@ function smartArt(score) {
 }
 
 function histogram3d() {
-  const values = [
-    ["Ibadah", 84],
-    ["Sehat", 72],
-    ["Ilmu", 81],
-    ["Amanah", 68]
-  ];
+  const areas = state.selectedAreas.length ? state.selectedAreas : lifeAreas.slice(0, 4);
+  const values = areas.slice(0, 4).map((area) => [area.split(" ")[0], consistencyFor(state.habits.filter((habit) => habit.area === area))]);
   return `
     <article class="chart-card">
       <h3>Life Area</h3>
+      ${state.habits.length ? "" : '<p class="muted chart-empty-note">Belum ada data habit.</p>'}
       <div class="chart-3d" aria-label="Histogram skor life area">
       ${values
         .map(
@@ -1359,18 +1173,21 @@ function histogram3d() {
 }
 
 function lineChart3d() {
-  const points = [
-    [8, 68],
-    [24, 74],
-    [40, 70],
-    [56, 82],
-    [72, 78],
-    [88, 86]
-  ];
+  const points = state.logs.length
+    ? state.logs.slice(0, 6).reverse().map((_, index, items) => [8 + index * 16, Math.round(((index + 1) / items.length) * todayScore().score)])
+    : [
+        [8, 0],
+        [24, 0],
+        [40, 0],
+        [56, 0],
+        [72, 0],
+        [88, 0]
+      ];
   const polyline = points.map(([x, y]) => `${x},${100 - y}`).join(" ");
   return `
     <article class="chart-card">
       <h3>Progress Pekanan</h3>
+      ${state.logs.length ? "" : '<p class="muted chart-empty-note">Belum ada riwayat progres.</p>'}
       <div class="line-chart-3d" aria-label="Line chart progress pekanan">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <defs>
@@ -1412,8 +1229,8 @@ function scoreTable3d(score) {
   const rows = [
     ["Skor Hari Ini", `${score.score}%`, "Aktivitas selesai / total aktivitas"],
     ["Konsistensi", `${score.score}%`, "Hari terjadwal yang selesai"],
-    ["Skor Sistem", "78%", "Rata-rata performa kebiasaan aktif"],
-    ["Progres Tujuan", "74%", "Perbandingan target dan capaian"]
+    ["Skor Sistem", `${averageSystemScore()}%`, "Rata-rata performa kebiasaan aktif"],
+    ["Progres Tujuan", `${averageGoalProgress()}%`, "Perbandingan target dan capaian"]
   ];
   return `
     <div class="score-table-3d" role="table" aria-label="Tabel scoring progress">
@@ -1443,7 +1260,7 @@ function systemsView() {
         ${pieChart3d(score.score)}
       </div>
       <div class="grid three-grid" style="margin-top:1rem">
-        ${state.systems
+        ${state.systems.length ? state.systems
           .map((system) => {
             const score = systemScore(system.id);
             return `
@@ -1456,7 +1273,7 @@ function systemsView() {
               </article>
             `;
           })
-          .join("")}
+          .join("") : emptyState("Belum ada sistem. Buat sistem pertama agar habit harian punya alur yang jelas.")}
       </div>
     </section>
   `);
@@ -1466,7 +1283,7 @@ function goalsView() {
   return shell(`
     <section class="panel">
       <div class="row-between"><h2>Tujuan</h2><button class="btn primary" onclick="addQuick('Goal')">+ Tujuan Baru</button></div>
-      ${state.goals.map(goalCard).join("")}
+      ${state.goals.length ? state.goals.map(goalCard).join("") : emptyState("Belum ada tujuan. Tambahkan tujuan pertama yang ingin kamu bangun.")}
     </section>
   `);
 }
@@ -1494,7 +1311,7 @@ function progressView() {
       <div class="grid three-grid metric-strip-3d">
         <section class="metric-card metric-cube"><span class="muted">Skor Umum</span><strong>${score.score}%</strong></section>
         <section class="metric-card metric-cube"><span class="muted">Konsistensi</span><strong>${score.score}%</strong></section>
-        <section class="metric-card metric-cube"><span class="muted">Skor Dampak</span><strong>82%</strong></section>
+        <section class="metric-card metric-cube"><span class="muted">Skor Dampak</span><strong>${state.impacts.length ? score.score : 0}%</strong></section>
       </div>
       <div class="analytics-grid">
         ${histogram3d()}
@@ -1506,7 +1323,7 @@ function progressView() {
   `);
 }
 
-function moduleHero(title, body, quickType, badge = "Contoh Data Aktif") {
+function moduleHero(title, body, quickType, badge = "Siap Diisi") {
   return `
     <section class="panel module-hero">
       <div class="row-between">
@@ -1529,13 +1346,13 @@ function impactView() {
     ${moduleHero("Dampak", "Melihat bukti perubahan nyata dari habit: energi, fokus, ketenangan, dan manfaat harian.", "Impact", "Dampak Terukur")}
     <div class="grid three-grid" style="margin-top:1rem">
       <section class="metric-card metric-cube"><span class="muted">Habit selesai hari ini</span><strong>${score.completed}/${score.total}</strong></section>
-      <section class="metric-card metric-cube"><span class="muted">Skor dampak contoh</span><strong>82%</strong></section>
+      <section class="metric-card metric-cube"><span class="muted">Skor Dampak</span><strong>${state.impacts.length ? score.score : 0}%</strong></section>
       <section class="metric-card metric-cube"><span class="muted">Habit terkuat</span><strong>${escapeHtml(strongestHabit()?.streak || 0)} hari</strong></section>
     </div>
     <section class="panel module-section" style="margin-top:1rem">
       <h2>Bukti Dampak</h2>
       <div class="module-grid">
-        ${state.impacts
+        ${state.impacts.length ? state.impacts
           .map(
             (item) => `
             <article class="module-card glossy-card">
@@ -1546,7 +1363,7 @@ function impactView() {
             </article>
           `
           )
-          .join("")}
+          .join("") : emptyState("Belum ada bukti dampak. Catatan dampak akan muncul setelah kamu menambahkan fakta perubahan dari habit.")}
       </div>
     </section>
   `);
@@ -1558,7 +1375,7 @@ function reviewsView() {
     <section class="panel module-section" style="margin-top:1rem">
       <h2>Catatan Muhasabah</h2>
       <div class="module-grid">
-        ${state.reviews
+        ${state.reviews.length ? state.reviews
           .map(
             (item) => `
             <article class="module-card glossy-card">
@@ -1570,7 +1387,7 @@ function reviewsView() {
             </article>
           `
           )
-          .join("")}
+          .join("") : emptyState("Belum ada catatan muhasabah. Tambahkan evaluasi pertama dari tombol Quick Add.")}
       </div>
     </section>
   `);
@@ -1582,7 +1399,7 @@ function journalView() {
     <section class="panel module-section" style="margin-top:1rem">
       <h2>Entri Jurnal</h2>
       <div class="module-grid">
-        ${state.journalEntries
+        ${state.journalEntries.length ? state.journalEntries
           .map(
             (entry) => `
             <article class="module-card glossy-card">
@@ -1593,7 +1410,7 @@ function journalView() {
             </article>
           `
           )
-          .join("")}
+          .join("") : emptyState("Belum ada entri jurnal. Tulis pengalaman, syukur, atau pelajaran pertamamu.")}
       </div>
     </section>
   `);
@@ -1605,7 +1422,7 @@ function achievementsView() {
     <section class="panel module-section" style="margin-top:1rem">
       <h2>Badge & Milestone</h2>
       <div class="achievement-grid">
-        ${state.achievements
+        ${state.achievements.length ? state.achievements
           .map(
             (item) => `
             <article class="achievement-card">
@@ -1617,7 +1434,7 @@ function achievementsView() {
             </article>
           `
           )
-          .join("")}
+          .join("") : emptyState("Belum ada pencapaian. Badge akan muncul setelah ada streak atau milestone dari kebiasaanmu.")}
       </div>
     </section>
   `);
@@ -1643,7 +1460,7 @@ function insightsView() {
     <section class="panel module-section" style="margin-top:1rem">
       <h2>Insight yang Bisa Ditindaklanjuti</h2>
       <div class="module-grid">
-        ${state.insights
+        ${state.insights.length ? state.insights
           .map(
             (item) => `
             <article class="module-card glossy-card">
@@ -1653,7 +1470,7 @@ function insightsView() {
             </article>
           `
           )
-          .join("")}
+          .join("") : emptyState("Belum ada insight. Aplikasi akan membaca pola setelah kamu punya data habit yang cukup.")}
       </div>
     </section>
   `);
@@ -1670,8 +1487,8 @@ function profileView() {
         </button>
         <div>
           <h2>${escapeHtml(userDisplayName())}</h2>
-          <p>${escapeHtml(state.vision)}</p>
-          <p class="muted">${escapeHtml(state.profileNote || "Fokus saat ini: menjaga amanah tubuh, ilmu, dan produktivitas dengan habit kecil yang istiqamah.")}</p>
+          <p>${escapeHtml(state.vision || "Visi pertumbuhan belum diisi.")}</p>
+          <p class="muted">${escapeHtml(state.profileNote || "Catatan profil belum diisi.")}</p>
         </div>
       </div>
       <div class="grid three-grid" style="margin-top:1rem">
