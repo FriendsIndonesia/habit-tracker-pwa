@@ -204,12 +204,96 @@ const demoState = {
     }
   ],
   logs: [],
+  impacts: [
+    {
+      title: "Energi Pagi Lebih Stabil",
+      area: "Kesehatan",
+      evidence: "Minum Air Cukup selesai 14 hari beruntun; skor kebiasaan pagi hari ini 100%.",
+      result: "Lebih siap memulai ibadah dan pekerjaan tanpa rasa lemas."
+    },
+    {
+      title: "Fokus Kerja Meningkat",
+      area: "Produktivitas",
+      evidence: "Fokus Menunaikan Amanah selesai hari ini dengan streak 7 hari.",
+      result: "Tugas penting lebih cepat selesai sebelum sore."
+    },
+    {
+      title: "Ilmu Lebih Terjaga",
+      area: "Ilmu & Belajar",
+      evidence: "Membaca Ilmu Bermanfaat selesai hari ini dengan streak 12 hari.",
+      result: "Ada catatan faedah baru untuk diamalkan dan dibagikan."
+    }
+  ],
+  journalEntries: [
+    {
+      title: "Syukur Hari Ini",
+      mood: "Tenang",
+      body: "Alhamdulillah, hari ini bisa menjaga rencana pagi dan membaca ilmu bermanfaat.",
+      lesson: "Kebiasaan kecil lebih mudah dijaga ketika dimulai setelah Subuh."
+    },
+    {
+      title: "Tantangan",
+      mood: "Perlu diperbaiki",
+      body: "Jalan kaki sore belum selesai karena agenda kerja mundur.",
+      lesson: "Aktivitas kesehatan perlu dipasang sebelum agenda sore yang padat."
+    }
+  ],
+  achievements: [
+    {
+      title: "14 Hari Istiqamah Minum Air",
+      type: "Streak",
+      detail: "Kebiasaan Minum Air Cukup mencapai streak 14 hari.",
+      earnedAt: "20 Agustus 2026"
+    },
+    {
+      title: "Pembaca Ilmu Konsisten",
+      type: "Milestone",
+      detail: "Membaca Ilmu Bermanfaat mencapai streak 12 hari.",
+      earnedAt: "20 Agustus 2026"
+    },
+    {
+      title: "Amanah Harian Terjaga",
+      type: "Badge",
+      detail: "Fokus Menunaikan Amanah selesai hari ini dan masuk 3 habit terkuat.",
+      earnedAt: "20 Agustus 2026"
+    }
+  ],
+  insights: [
+    {
+      title: "Pagi adalah waktu terkuat",
+      signal: "Habit pagi selesai 2 dari 2.",
+      advice: "Letakkan aktivitas terpenting setelah Subuh atau awal pagi."
+    },
+    {
+      title: "Sore perlu buffer",
+      signal: "Jalan Kaki 30 Menit belum selesai.",
+      advice: "Beri pengingat lebih awal atau pecah menjadi 2 sesi 15 menit."
+    },
+    {
+      title: "Ilmu dan produktivitas saling menguatkan",
+      signal: "Membaca dan fokus kerja sama-sama selesai hari ini.",
+      advice: "Jaga urutan: niat pagi, fokus kerja, lalu catat faedah malam."
+    }
+  ],
+  settingsNotes: [
+    {
+      title: "Backend Google Workspace aktif",
+      detail: "Data tersinkron ke akun friendsindonesia28@gmail.com melalui Apps Script."
+    },
+    {
+      title: "Mode PWA aktif",
+      detail: "Aplikasi sudah dipublikasikan lewat GitHub Pages dan dapat dipasang di perangkat."
+    }
+  ],
   reviews: [
     {
       month: "August 2026",
       completion: 78,
       strongest: "Membaca Ilmu Bermanfaat",
-      weakest: "Jalan Kaki 30 Menit"
+      weakest: "Jalan Kaki 30 Menit",
+      gratitude: "Masih diberi kesempatan memperbaiki amanah tubuh dan waktu.",
+      improvement: "Jadwalkan jalan kaki sebelum pekerjaan sore menumpuk.",
+      tomorrow: "Mulai dengan minum air, niat pagi, lalu 15 menit jalan kaki."
     }
   ]
 };
@@ -231,6 +315,12 @@ function normalizeState(nextState) {
   nextState.goals = nextState.goals?.length ? nextState.goals : structuredClone(demoState.goals);
   nextState.systems = nextState.systems?.length ? nextState.systems : structuredClone(demoState.systems);
   nextState.logs = nextState.logs || [];
+  nextState.impacts = nextState.impacts?.length ? nextState.impacts : structuredClone(demoState.impacts);
+  nextState.reviews = nextState.reviews?.length ? nextState.reviews : structuredClone(demoState.reviews);
+  nextState.journalEntries = nextState.journalEntries?.length ? nextState.journalEntries : structuredClone(demoState.journalEntries);
+  nextState.achievements = nextState.achievements?.length ? nextState.achievements : structuredClone(demoState.achievements);
+  nextState.insights = nextState.insights?.length ? nextState.insights : structuredClone(demoState.insights);
+  nextState.settingsNotes = nextState.settingsNotes?.length ? nextState.settingsNotes : structuredClone(demoState.settingsNotes);
   nextState.avatarUrl = nextState.avatarUrl || "";
   return nextState;
 }
@@ -268,6 +358,19 @@ function toast(message) {
   window.setTimeout(() => element.classList.remove("show"), 2200);
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function userDisplayName() {
+  return state.user?.name || "Abu Adzka";
+}
+
 function todayScore() {
   const completed = state.habits.filter((habit) => habit.completed).length;
   return {
@@ -275,6 +378,14 @@ function todayScore() {
     total: state.habits.length,
     score: Math.round((completed / state.habits.length) * 100)
   };
+}
+
+function strongestHabit() {
+  return [...state.habits].sort((a, b) => b.streak - a.streak)[0];
+}
+
+function weakestHabit() {
+  return [...state.habits].sort((a, b) => a.streak - b.streak)[0];
 }
 
 function consistencyFor(habits) {
@@ -376,9 +487,121 @@ function toggleHabit(id) {
   toast(habit.completed ? `${habit.name} selesai. Amal kecil yang dijaga akan membentuk sistem besar.` : "Terlewat hari ini. Tidak apa-apa, lanjutkan besok.");
 }
 
+const quickAddConfig = {
+  Goal: {
+    label: "Tujuan",
+    title: "Tujuan Baru",
+    fieldLabel: "Nama tujuan",
+    placeholder: "Contoh: Menjaga Shalat Tepat Waktu",
+    helper: "Dipakai untuk menambah target besar yang ingin dicapai."
+  },
+  System: {
+    label: "Sistem",
+    title: "Sistem Baru",
+    fieldLabel: "Nama sistem",
+    placeholder: "Contoh: Sistem Ibadah Pagi",
+    helper: "Dipakai untuk menambah rangkaian rutinitas pendukung tujuan."
+  },
+  Habit: {
+    label: "Kebiasaan",
+    title: "Kebiasaan Baru",
+    fieldLabel: "Nama kebiasaan",
+    placeholder: "Contoh: Tilawah 10 menit",
+    helper: "Dipakai untuk menambah kebiasaan harian."
+  },
+  Activity: {
+    label: "Aktivitas",
+    title: "Aktivitas Hari Ini",
+    fieldLabel: "Nama aktivitas",
+    placeholder: "Contoh: Sedekah sebelum Maghrib",
+    helper: "Dipakai untuk menambah aktivitas khusus hari ini."
+  },
+  Impact: {
+    label: "Dampak",
+    title: "Catatan Dampak Baru",
+    fieldLabel: "Dampak yang terasa",
+    placeholder: "Contoh: Tidur lebih nyenyak setelah mengurangi layar malam",
+    helper: "Catat bukti perubahan nyata dari habit yang dijalankan."
+  },
+  Review: {
+    label: "Muhasabah",
+    title: "Catatan Muhasabah Baru",
+    fieldLabel: "Isi muhasabah",
+    placeholder: "Contoh: Hari ini perlu lebih menjaga waktu Ashar",
+    helper: "Catat syukur, koreksi diri, dan rencana perbaikan."
+  },
+  Journal: {
+    label: "Jurnal",
+    title: "Entri Jurnal Baru",
+    fieldLabel: "Catatan jurnal",
+    placeholder: "Contoh: Alhamdulillah lebih tenang setelah dzikir pagi",
+    helper: "Tulis pengalaman, pelajaran, rasa syukur, atau tantangan."
+  },
+  Achievement: {
+    label: "Pencapaian",
+    title: "Pencapaian Baru",
+    fieldLabel: "Nama pencapaian",
+    placeholder: "Contoh: 7 hari menjaga muhasabah malam",
+    helper: "Catat momen keberhasilan yang patut disyukuri."
+  },
+  Insight: {
+    label: "Insight",
+    title: "Insight Baru",
+    fieldLabel: "Pola yang terlihat",
+    placeholder: "Contoh: Aktivitas pagi lebih konsisten daripada malam",
+    helper: "Catat pola penting dari data kebiasaan."
+  },
+  Profile: {
+    label: "Profil",
+    title: "Update Profil",
+    fieldLabel: "Catatan profil",
+    placeholder: "Contoh: Fokus utama bulan ini adalah kesehatan dan ibadah",
+    helper: "Catat preferensi, identitas pertumbuhan, atau fokus pribadi."
+  },
+  Settings: {
+    label: "Pengaturan",
+    title: "Pengaturan Baru",
+    fieldLabel: "Nama pengaturan",
+    placeholder: "Contoh: Aktifkan pengingat muhasabah malam",
+    helper: "Catat pengaturan atau preferensi yang ingin diterapkan."
+  }
+};
+
 function addQuick(type) {
-  const labels = { Goal: "Tujuan", System: "Sistem", Habit: "Kebiasaan", Activity: "Aktivitas" };
-  const name = prompt(`Nama ${labels[type] || type} baru`);
+  const config = quickAddConfig[type] || quickAddConfig.Habit;
+  const existing = document.querySelector(".quick-modal-backdrop");
+  if (existing) existing.remove();
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `
+      <div class="quick-modal-backdrop" role="presentation">
+        <form class="quick-modal" onsubmit="submitQuickAdd(event, '${type}')">
+          <div class="quick-modal-title">
+            <span class="quick-modal-user">${escapeHtml(userDisplayName())}</span>
+            <strong>${escapeHtml(config.title)}</strong>
+          </div>
+          <label for="quick-add-name">${escapeHtml(config.fieldLabel)}</label>
+          <input id="quick-add-name" name="name" type="text" required placeholder="${escapeHtml(config.placeholder)}" autocomplete="off" />
+          <p class="muted">${escapeHtml(config.helper)}</p>
+          <div class="quick-modal-actions">
+            <button class="btn" type="button" onclick="closeQuickAdd()">Batal</button>
+            <button class="btn primary" type="submit">Simpan</button>
+          </div>
+        </form>
+      </div>
+    `
+  );
+  document.querySelector("#quick-add-name")?.focus();
+}
+
+function closeQuickAdd() {
+  document.querySelector(".quick-modal-backdrop")?.remove();
+}
+
+function submitQuickAdd(event, type) {
+  event.preventDefault();
+  const labels = Object.fromEntries(Object.entries(quickAddConfig).map(([key, value]) => [key, value.label]));
+  const name = new FormData(event.currentTarget).get("name")?.trim();
   if (!name) return;
   if (type === "Goal") {
     state.goals.unshift({
@@ -415,6 +638,58 @@ function addQuick(type) {
       completed: false
     });
   }
+  if (type === "Impact") {
+    state.impacts.unshift({
+      title: name,
+      area: state.selectedAreas?.[0] || "Akhlak & Pengembangan Diri",
+      evidence: `Ditambahkan manual oleh ${userDisplayName()} dari Quick Add.`,
+      result: "Pantau apakah dampak ini berulang setelah habit dijaga beberapa hari."
+    });
+  }
+  if (type === "Review") {
+    state.reviews.unshift({
+      month: "Catatan Hari Ini",
+      completion: todayScore().score,
+      strongest: strongestHabit()?.name || "Belum ada",
+      weakest: weakestHabit()?.name || "Belum ada",
+      gratitude: name,
+      improvement: "Tentukan satu perbaikan kecil untuk besok.",
+      tomorrow: "Mulai dari habit yang paling mudah dijaga."
+    });
+  }
+  if (type === "Journal") {
+    state.journalEntries.unshift({
+      title: "Catatan Baru",
+      mood: "Reflektif",
+      body: name,
+      lesson: "Ambil satu pelajaran kecil dan amalkan besok."
+    });
+  }
+  if (type === "Achievement") {
+    state.achievements.unshift({
+      title: name,
+      type: "Manual",
+      detail: `Dicatat oleh ${userDisplayName()} sebagai pencapaian yang disyukuri.`,
+      earnedAt: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    });
+  }
+  if (type === "Insight") {
+    state.insights.unshift({
+      title: name,
+      signal: "Insight manual dari pengamatan pengguna.",
+      advice: "Cek lagi pola ini setelah beberapa hari data terkumpul."
+    });
+  }
+  if (type === "Profile") {
+    state.profileNote = name;
+  }
+  if (type === "Settings") {
+    state.settingsNotes.unshift({
+      title: name,
+      detail: `Preferensi dicatat oleh ${userDisplayName()} dan bisa dijadikan pengaturan teknis berikutnya.`
+    });
+  }
+  closeQuickAdd();
   saveState();
   render();
   toast(`${labels[type] || type} berhasil dibuat.`);
@@ -1004,14 +1279,206 @@ function progressView() {
   `);
 }
 
-function simplePage(title, body) {
-  return shell(`
-    <section class="panel">
-      <h2>${title}</h2>
-      <p class="muted">${body}</p>
+function moduleHero(title, body, quickType, badge = "Contoh Data Aktif") {
+  return `
+    <section class="panel module-hero">
+      <div class="row-between">
+        <div>
+          <h2>${title}</h2>
+          <p class="muted">${body}</p>
+        </div>
+        <span class="badge badge-3d">${badge}</span>
+      </div>
       <div class="quick-add">
-        <button class="btn" onclick="toast('Modul ini disiapkan untuk fase berikutnya.')">Buka</button>
-        <button class="btn primary" onclick="addQuick('Habit')">Quick Add</button>
+        <button class="btn primary" onclick="addQuick('${quickType}')">Quick Add</button>
+      </div>
+    </section>
+  `;
+}
+
+function impactView() {
+  const score = todayScore();
+  return shell(`
+    ${moduleHero("Dampak", "Melihat bukti perubahan nyata dari habit: energi, fokus, ketenangan, dan manfaat harian.", "Impact", "Dampak Terukur")}
+    <div class="grid three-grid" style="margin-top:1rem">
+      <section class="metric-card metric-cube"><span class="muted">Habit selesai hari ini</span><strong>${score.completed}/${score.total}</strong></section>
+      <section class="metric-card metric-cube"><span class="muted">Skor dampak contoh</span><strong>82%</strong></section>
+      <section class="metric-card metric-cube"><span class="muted">Habit terkuat</span><strong>${escapeHtml(strongestHabit()?.streak || 0)} hari</strong></section>
+    </div>
+    <section class="panel module-section" style="margin-top:1rem">
+      <h2>Bukti Dampak</h2>
+      <div class="module-grid">
+        ${state.impacts
+          .map(
+            (item) => `
+            <article class="module-card glossy-card">
+              <span class="badge">${escapeHtml(item.area)}</span>
+              <h3>${escapeHtml(item.title)}</h3>
+              <p><strong>Fakta:</strong> ${escapeHtml(item.evidence)}</p>
+              <p class="muted"><strong>Makna:</strong> ${escapeHtml(item.result)}</p>
+            </article>
+          `
+          )
+          .join("")}
+      </div>
+    </section>
+  `);
+}
+
+function reviewsView() {
+  return shell(`
+    ${moduleHero("Muhasabah", "Ruang evaluasi diri: syukur, koreksi, dan rencana perbaikan esok hari.", "Review", "Refleksi Islami")}
+    <section class="panel module-section" style="margin-top:1rem">
+      <h2>Catatan Muhasabah</h2>
+      <div class="module-grid">
+        ${state.reviews
+          .map(
+            (item) => `
+            <article class="module-card glossy-card">
+              <span class="badge">${escapeHtml(item.month)}</span>
+              <h3>Skor Periode ${escapeHtml(item.completion)}%</h3>
+              <p><strong>Syukur:</strong> ${escapeHtml(item.gratitude || "Alhamdulillah masih diberi kesempatan memperbaiki diri.")}</p>
+              <p><strong>Perlu diperbaiki:</strong> ${escapeHtml(item.improvement || item.weakest)}</p>
+              <p class="muted"><strong>Besok:</strong> ${escapeHtml(item.tomorrow || "Mulai lagi dari amal kecil yang paling mudah.")}</p>
+            </article>
+          `
+          )
+          .join("")}
+      </div>
+    </section>
+  `);
+}
+
+function journalView() {
+  return shell(`
+    ${moduleHero("Jurnal", "Tempat menulis pengalaman, rasa syukur, pelajaran, tantangan, dan doa pribadi.", "Journal", "Catatan Harian")}
+    <section class="panel module-section" style="margin-top:1rem">
+      <h2>Entri Jurnal</h2>
+      <div class="module-grid">
+        ${state.journalEntries
+          .map(
+            (entry) => `
+            <article class="module-card glossy-card">
+              <span class="badge">${escapeHtml(entry.mood)}</span>
+              <h3>${escapeHtml(entry.title)}</h3>
+              <p>${escapeHtml(entry.body)}</p>
+              <p class="muted"><strong>Pelajaran:</strong> ${escapeHtml(entry.lesson)}</p>
+            </article>
+          `
+          )
+          .join("")}
+      </div>
+    </section>
+  `);
+}
+
+function achievementsView() {
+  return shell(`
+    ${moduleHero("Pencapaian", "Papan apresiasi untuk streak, milestone, dan momen kecil yang patut disyukuri.", "Achievement", "Badge Berkilau")}
+    <section class="panel module-section" style="margin-top:1rem">
+      <h2>Badge & Milestone</h2>
+      <div class="achievement-grid">
+        ${state.achievements
+          .map(
+            (item) => `
+            <article class="achievement-card">
+              <div class="medal-3d">★</div>
+              <span class="badge">${escapeHtml(item.type)}</span>
+              <h3>${escapeHtml(item.title)}</h3>
+              <p>${escapeHtml(item.detail)}</p>
+              <small>${escapeHtml(item.earnedAt)}</small>
+            </article>
+          `
+          )
+          .join("")}
+      </div>
+    </section>
+  `);
+}
+
+function insightsView() {
+  const morningScore = consistencyFor(state.habits.filter((habit) => habit.time === "Morning"));
+  const afternoonScore = consistencyFor(state.habits.filter((habit) => habit.time === "Afternoon"));
+  const eveningScore = consistencyFor(state.habits.filter((habit) => habit.time === "Evening"));
+  return shell(`
+    ${moduleHero("Insight", "Analisis pola dari data habit agar pengguna tahu waktu terkuat, titik lemah, dan langkah berikutnya.", "Insight", "Rule-Based Insight")}
+    <div class="grid three-grid" style="margin-top:1rem">
+      <section class="metric-card metric-cube"><span class="muted">Pagi</span><strong>${morningScore}%</strong></section>
+      <section class="metric-card metric-cube"><span class="muted">Siang/Sore</span><strong>${afternoonScore}%</strong></section>
+      <section class="metric-card metric-cube"><span class="muted">Malam</span><strong>${eveningScore}%</strong></section>
+    </div>
+    <section class="panel analytics-panel" style="margin-top:1rem">
+      <div class="analytics-grid compact-analytics">
+        ${histogram3d()}
+        ${lineChart3d()}
+      </div>
+    </section>
+    <section class="panel module-section" style="margin-top:1rem">
+      <h2>Insight yang Bisa Ditindaklanjuti</h2>
+      <div class="module-grid">
+        ${state.insights
+          .map(
+            (item) => `
+            <article class="module-card glossy-card">
+              <h3>${escapeHtml(item.title)}</h3>
+              <p><strong>Sinyal:</strong> ${escapeHtml(item.signal)}</p>
+              <p class="muted"><strong>Saran:</strong> ${escapeHtml(item.advice)}</p>
+            </article>
+          `
+          )
+          .join("")}
+      </div>
+    </section>
+  `);
+}
+
+function profileView() {
+  const score = todayScore();
+  return shell(`
+    ${moduleHero("Profil", "Identitas pertumbuhan pengguna: nama, fokus hidup, life area, dan ringkasan perjalanan habit.", "Profile", "Identitas Pengguna")}
+    <section class="panel module-section" style="margin-top:1rem">
+      <div class="profile-summary">
+        <button class="avatar-upload large-avatar" onclick="triggerAvatarUpload()" aria-label="Upload foto profil">
+          ${state.avatarUrl ? `<img src="${state.avatarUrl}" alt="Foto profil" />` : `<span>${escapeHtml(userDisplayName().slice(0, 1))}</span>`}
+        </button>
+        <div>
+          <h2>${escapeHtml(userDisplayName())}</h2>
+          <p class="muted">${escapeHtml(state.user?.email || appConfig.workspaceAccount || "friendsindonesia28@gmail.com")}</p>
+          <p>${escapeHtml(state.vision)}</p>
+          <p class="muted">${escapeHtml(state.profileNote || "Fokus saat ini: menjaga amanah tubuh, ilmu, dan produktivitas dengan habit kecil yang istiqamah.")}</p>
+        </div>
+      </div>
+      <div class="grid three-grid" style="margin-top:1rem">
+        <section class="metric-card"><span class="muted">Life Area</span><strong>${state.selectedAreas.length}</strong></section>
+        <section class="metric-card"><span class="muted">Habit aktif</span><strong>${state.habits.length}</strong></section>
+        <section class="metric-card"><span class="muted">Skor hari ini</span><strong>${score.score}%</strong></section>
+      </div>
+    </section>
+  `);
+}
+
+function settingsView() {
+  return shell(`
+    ${moduleHero("Pengaturan", "Kontrol preferensi aplikasi: backend, PWA, sinkronisasi, data, dan catatan pengaturan.", "Settings", "Kontrol Aplikasi")}
+    <section class="panel module-section" style="margin-top:1rem">
+      <h2>Status Sistem</h2>
+      <div class="score-table-3d" role="table" aria-label="Status pengaturan aplikasi">
+        <div role="row" class="score-table-head"><span>Fitur</span><span>Status</span><span>Keterangan</span></div>
+        <div role="row" class="score-table-row"><span>Google Workspace</span><strong>Aktif</strong><span>${escapeHtml(appConfig.workspaceAccount || "friendsindonesia28@gmail.com")}</span></div>
+        <div role="row" class="score-table-row"><span>Apps Script Backend</span><strong>Terhubung</strong><span>${appConfig.googleAppsScriptUrl ? "URL backend sudah terpasang" : "Belum ada URL backend"}</span></div>
+        <div role="row" class="score-table-row"><span>GitHub Pages PWA</span><strong>Aktif</strong><span>Branch main, folder root</span></div>
+      </div>
+      <div class="module-grid" style="margin-top:1rem">
+        ${state.settingsNotes
+          .map(
+            (item) => `
+            <article class="module-card glossy-card">
+              <h3>${escapeHtml(item.title)}</h3>
+              <p class="muted">${escapeHtml(item.detail)}</p>
+            </article>
+          `
+          )
+          .join("")}
       </div>
     </section>
   `);
@@ -1028,13 +1495,13 @@ function render() {
   else if (state.route === "systems") app.innerHTML = systemsView();
   else if (state.route === "habits") app.innerHTML = habitsView();
   else if (state.route === "progress") app.innerHTML = progressView();
-  else if (state.route === "impact") app.innerHTML = simplePage("Dampak", "Energi, fokus, suasana hati, produktivitas, dan korelasi kebiasaan akan tercatat di sini.");
-  else if (state.route === "reviews") app.innerHTML = simplePage("Muhasabah", "Alur muhasabah pekanan dan bulanan disiapkan untuk fase berikutnya.");
-  else if (state.route === "journal") app.innerHTML = simplePage("Jurnal", "Catat rasa syukur, pelajaran, tantangan, dan niat perbaikan.");
-  else if (state.route === "achievements") app.innerHTML = simplePage("Pencapaian", "Momen pencapaian bernuansa gold seperti 7 hari istiqamah dan muhasabah pertama.");
-  else if (state.route === "insights") app.innerHTML = simplePage("Insight", "Mesin insight rule-based disiapkan untuk pola konsistensi dan jadwal.");
-  else if (state.route === "profile") app.innerHTML = simplePage("Profile", "Profil, zona waktu, bahasa, dan preferensi personal.");
-  else if (state.route === "settings") app.innerHTML = simplePage("Settings", "Tema, notifikasi, privasi, ekspor data, dan kontrol akun.");
+  else if (state.route === "impact") app.innerHTML = impactView();
+  else if (state.route === "reviews") app.innerHTML = reviewsView();
+  else if (state.route === "journal") app.innerHTML = journalView();
+  else if (state.route === "achievements") app.innerHTML = achievementsView();
+  else if (state.route === "insights") app.innerHTML = insightsView();
+  else if (state.route === "profile") app.innerHTML = profileView();
+  else if (state.route === "settings") app.innerHTML = settingsView();
 }
 
 window.navigate = navigate;
@@ -1042,6 +1509,8 @@ window.login = login;
 window.completeOnboarding = completeOnboarding;
 window.toggleHabit = toggleHabit;
 window.addQuick = addQuick;
+window.submitQuickAdd = submitQuickAdd;
+window.closeQuickAdd = closeQuickAdd;
 window.addActivity = addActivity;
 window.applySuggestion = applySuggestion;
 window.triggerAvatarUpload = triggerAvatarUpload;
