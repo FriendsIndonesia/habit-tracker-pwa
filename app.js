@@ -942,8 +942,8 @@ function shell(content) {
         <div class="logo-lockup">
           <img src="./assets/logo.png" alt="Habit Tracker logo">
           <div>
-            <p class="brand-title">Habit Tracker</p>
-            <span class="brand-subtitle">Better Life</span>
+            <p class="brand-title">HABIT TRACKER</p>
+            <span class="brand-subtitle">Better Habits, Better Life</span>
           </div>
         </div>
         <nav class="nav-list" aria-label="Main navigation">
