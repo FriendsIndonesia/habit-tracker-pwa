@@ -9,6 +9,9 @@ function doGet(event) {
     const result = validateInvitationCode(params.code || "", params.email || "");
     return jsonResponse(result, params.callback);
   }
+  if (params.action === "backend_url") {
+    return jsonResponse({ ok: true, url: setupHabitTrackerBackend() }, params.callback);
+  }
   return jsonResponse({
     ok: true,
     app: "Habit Tracker",
@@ -110,6 +113,7 @@ function setupHabitTrackerBackend() {
       }
     }
   });
+  Logger.log(spreadsheet.getUrl());
   return spreadsheet.getUrl();
 }
 
