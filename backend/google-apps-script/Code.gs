@@ -1,6 +1,6 @@
 const SPREADSHEET_NAME = "Habit Tracker Backend";
 const OWNER_EMAIL = "friendsindonesia28@gmail.com";
-const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "state_saved", "password_recovery_requested"];
+const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "state_saved", "password_recovery_requested", "otp_whatsapp_requested", "user_registered_otp_verified"];
 
 function doGet() {
   return jsonResponse({
@@ -29,10 +29,28 @@ function doPost(event) {
       sendPasswordRecoveryEmail(body.payload || {});
     }
 
+    if (body.action === "otp_whatsapp_requested") {
+      notifyOwnerForWhatsAppOtp(body.payload || {});
+    }
+
     return jsonResponse({ ok: true, action: body.action || "state_saved" });
   } catch (error) {
     return jsonResponse({ ok: false, error: error.message });
   }
+}
+
+function notifyOwnerForWhatsAppOtp(payload) {
+  if (!payload.phone || !payload.otpCode) return;
+  MailApp.sendEmail({
+    to: OWNER_EMAIL,
+    subject: "OTP WhatsApp Habit Tracker",
+    body:
+      "Permintaan OTP WhatsApp baru.\n\n" +
+      "Nomor WhatsApp: " + payload.phone + "\n" +
+      "Email: " + (payload.email || "-") + "\n" +
+      "Kode OTP: " + payload.otpCode + "\n\n" +
+      "Catatan: hubungkan Apps Script ke provider WhatsApp Business API agar OTP terkirim otomatis ke pengguna."
+  });
 }
 
 function sendPasswordRecoveryEmail(payload) {
