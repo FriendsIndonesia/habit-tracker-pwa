@@ -405,11 +405,13 @@ async function validateInvitationCode(code, email) {
     }
   }
   const localCodes = ["MARKAZ2026", "HABIT2026", "MDD-ACCESS-2026"];
+  const isManagedMddCode = /^MDD_\d{4,}$/.test(normalizedCode);
+  const isValidFallbackCode = localCodes.includes(normalizedCode) || isManagedMddCode;
   return {
     ok: true,
-    valid: localCodes.includes(normalizedCode),
+    valid: isValidFallbackCode,
     owner: "Markaz Dakwah Digital",
-    message: localCodes.includes(normalizedCode) ? "Kode valid." : "Kode undangan tidak ditemukan."
+    message: isValidFallbackCode ? "Kode valid." : "Kode undangan tidak ditemukan."
   };
 }
 
