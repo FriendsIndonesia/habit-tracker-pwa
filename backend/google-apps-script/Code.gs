@@ -1,5 +1,6 @@
 const SPREADSHEET_NAME = "Habit Tracker Backend V2";
 const OWNER_EMAIL = "friendsindonesia28@gmail.com";
+const OWNER_EXPORT_KEY = "MDD-OWNER-PDF-2026";
 const DEFAULT_INVITE_CODES = ["MARKAZ2026", "HABIT2026", "MDD-ACCESS-2026"];
 const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "state_saved", "password_recovery_requested", "invite_codes", "invite_code_checked", "user_registered_invite_verified"];
 
@@ -11,6 +12,9 @@ function doGet(event) {
   }
   if (params.action === "backend_url") {
     return jsonResponse({ ok: true, url: setupHabitTrackerBackend() }, params.callback);
+  }
+  if (params.action === "export_users_pdf") {
+    return exportUsersPdf(params);
   }
   return jsonResponse({
     ok: true,
@@ -115,6 +119,139 @@ function isInviteCodeActive(value) {
   const normalized = String(value || "").trim().toLowerCase();
   if (!normalized) return true;
   return ["true", "active", "aktif", "ya", "yes", "y", "1", "valid", "tersedia", "available"].includes(normalized);
+}
+
+function exportUsersPdf(params) {
+  if (!isOwnerExportAuthorized(params.owner_key || "")) {
+    return HtmlService.createHtmlOutput(
+      "<h1>Akses ditolak</h1><p>Kode owner tidak valid. Silakan minta kode export kepada owner aplikasi.</p>"
+    );
+  }
+
+  const users = collectUserDatabase();
+  const html = buildUsersPdfHtml(users);
+  const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss");
+  const blob = Utilities
+    .newBlob(html, "text/html", "database-pengguna-habit-tracker.html")
+    .getAs(MimeType.PDF)
+    .setName("Database Pengguna Habit Tracker " + timestamp + ".pdf");
+  const file = DriveApp.createFile(blob);
+  file.setDescription("Export database pengguna Habit Tracker pada " + new Date().toISOString());
+
+  const downloadUrl = "https://drive.google.com/uc?export=download&id=" + file.getId();
+  return HtmlService.createHtmlOutput(
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<style>body{font-family:Arial,sans-serif;padding:32px;line-height:1.5}a{display:inline-block;background:#0b63ce;color:white;padding:12px 16px;border-radius:8px;text-decoration:none}</style>' +
+    "<h1>Database Pengguna Siap Diunduh</h1>" +
+    "<p>File PDF sudah dibuat di Google Drive owner.</p>" +
+    '<p><a href="' + downloadUrl + '" target="_blank" rel="noopener">Download PDF</a></p>' +
+    '<p><a href="' + file.getUrl() + '" target="_blank" rel="noopener">Buka di Google Drive</a></p>'
+  );
+}
+
+function collectUserDatabase() {
+  const usersByKey = {};
+  collectUsersFromActionSheet("user_registered_invite_verified", usersByKey);
+  collectUsersFromActionSheet("state_saved", usersByKey);
+  return Object.keys(usersByKey)
+    .map((key) => usersByKey[key])
+    .sort((a, b) => String(a.registeredAt || "").localeCompare(String(b.registeredAt || "")));
+}
+
+function collectUsersFromActionSheet(sheetName, usersByKey) {
+  const sheet = getOrCreateSheet(sheetName);
+  const rows = sheet.getDataRange().getValues().slice(1);
+  rows.forEach((row) => {
+    const createdAt = row[0] || "";
+    const payload = parseJson(row[6]);
+    const user = payload.user || payload;
+    const email = String(user.email || payload.email || "").trim();
+    const whatsapp = String(user.whatsapp || payload.whatsapp || "").trim();
+    if (!email && !whatsapp) return;
+    const key = (email || whatsapp).toLowerCase();
+    usersByKey[key] = Object.assign(usersByKey[key] || {}, {
+      name: user.name || payload.name || usersByKey[key]?.name || "",
+      email: email || usersByKey[key]?.email || "",
+      whatsapp: whatsapp || usersByKey[key]?.whatsapp || "",
+      inviteCode: user.inviteCode || payload.inviteCode || usersByKey[key]?.inviteCode || "",
+      registeredAt: user.registeredAt || payload.validatedAt || createdAt || usersByKey[key]?.registeredAt || "",
+      owner: payload.owner || user.registeredBy || usersByKey[key]?.owner || "Admin"
+    });
+  });
+}
+
+function buildUsersPdfHtml(users) {
+  const generatedAt = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd MMMM yyyy HH:mm");
+  const rows = users.length
+    ? users.map((user, index) =>
+        "<tr>" +
+        "<td>" + (index + 1) + "</td>" +
+        "<td>" + escapeHtml(user.name || "-") + "</td>" +
+        "<td>" + escapeHtml(user.email || "-") + "</td>" +
+        "<td>" + escapeHtml(user.whatsapp || "-") + "</td>" +
+        "<td>" + escapeHtml(user.inviteCode || "-") + "</td>" +
+        "<td>" + escapeHtml(formatDateForPdf(user.registeredAt)) + "</td>" +
+        "</tr>"
+      ).join("")
+    : '<tr><td colspan="6">Belum ada data pengguna.</td></tr>';
+
+  return '<!doctype html><html><head><meta charset="UTF-8">' +
+    "<style>" +
+    "body{font-family:Arial,sans-serif;color:#111827;padding:24px}" +
+    "h1{margin:0 0 6px;font-size:22px}p{margin:0 0 14px;color:#4b5563}" +
+    "table{width:100%;border-collapse:collapse;font-size:11px}" +
+    "th{background:#0b1f3a;color:#fff;text-align:left}" +
+    "th,td{border:1px solid #d1d5db;padding:7px;vertical-align:top}" +
+    ".meta{margin-bottom:18px}.footer{margin-top:18px;font-size:10px;color:#6b7280}" +
+    "</style></head><body>" +
+    "<h1>Database Pengguna Habit Tracker</h1>" +
+    '<p class="meta">Owner: ' + escapeHtml(OWNER_EMAIL) + " | Dibuat: " + escapeHtml(generatedAt) + " | Total pengguna: " + users.length + "</p>" +
+    "<table><thead><tr><th>No</th><th>Nama</th><th>Email</th><th>No. Whatsapp</th><th>Kode Undangan</th><th>Terdaftar</th></tr></thead><tbody>" +
+    rows +
+    "</tbody></table>" +
+    '<p class="footer">Developed by Markaz Dakwah Digital</p>' +
+    "</body></html>";
+}
+
+function setupOwnerExportKey() {
+  const key = "MDD-" + Utilities.getUuid().replace(/-/g, "").slice(0, 20).toUpperCase();
+  PropertiesService.getScriptProperties().setProperty("OWNER_EXPORT_KEY", key);
+  Logger.log("OWNER_EXPORT_KEY: " + key);
+  return key;
+}
+
+function isOwnerExportAuthorized(key) {
+  let savedKey = OWNER_EXPORT_KEY;
+  try {
+    savedKey = PropertiesService.getScriptProperties().getProperty("OWNER_EXPORT_KEY") || OWNER_EXPORT_KEY;
+  } catch (error) {
+    savedKey = OWNER_EXPORT_KEY;
+  }
+  return Boolean(savedKey) && String(key || "").trim() === savedKey;
+}
+
+function parseJson(value) {
+  try {
+    return JSON.parse(value || "{}");
+  } catch (error) {
+    return {};
+  }
+}
+
+function formatDateForPdf(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return String(value);
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), "dd MMM yyyy HH:mm");
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function sendPasswordRecoveryEmail(payload) {
