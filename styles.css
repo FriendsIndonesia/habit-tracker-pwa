@@ -628,6 +628,23 @@ button {
   transform: perspective(70rem) translateY(-2px) rotateX(0.6deg);
 }
 
+.empty-state {
+  margin-top: 0.9rem;
+  padding: 1rem;
+  border: 1px dashed rgba(246, 196, 67, 0.28);
+  border-radius: 8px;
+  color: var(--muted);
+  background: rgba(6, 16, 31, 0.42);
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.chart-empty-note {
+  min-height: 1.2rem;
+}
+
 .score-ring {
   display: grid;
   place-items: center;
