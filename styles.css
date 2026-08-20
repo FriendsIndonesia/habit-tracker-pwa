@@ -966,6 +966,25 @@ button {
   align-items: center;
 }
 
+.owner-export-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(246, 196, 67, 0.32);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(246, 196, 67, 0.13), rgba(14, 116, 144, 0.12)),
+    rgba(8, 23, 44, 0.72);
+  box-shadow: var(--shadow-gold);
+}
+
+.owner-export-box p {
+  margin: 0.25rem 0 0;
+}
+
 .large-avatar {
   width: 5rem;
   height: 5rem;
