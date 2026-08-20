@@ -512,11 +512,16 @@ async function login(event) {
   const email = form.get("email")?.trim();
   const password = form.get("password")?.trim();
   const inviteCode = form.get("inviteCode")?.trim();
+  const whatsapp = form.get("whatsapp")?.trim();
   if (!email || !password) {
     toast("Isi email dan password terlebih dahulu.");
     return;
   }
   if (mode === "register") {
+    if (!whatsapp) {
+      toast("Isi No. Whatsapp terlebih dahulu.");
+      return;
+    }
     if (!inviteCode) {
       toast("Isi kode undangan dari admin terlebih dahulu.");
       return;
@@ -534,6 +539,7 @@ async function login(event) {
     state.user = {
       name: form.get("name") || "Pengguna Habit Tracker",
       email,
+      whatsapp,
       inviteCode,
       invitationVerified: true,
       invitationVerifiedAt: new Date().toISOString(),
@@ -546,6 +552,7 @@ async function login(event) {
     saveState();
     syncWithGoogleWorkspace("user_registered_invite_verified", {
       email,
+      whatsapp,
       inviteCode,
       validatedAt: new Date().toISOString(),
       owner: validation.owner || "admin"
@@ -963,6 +970,7 @@ function authView(mode = "login") {
         <form onsubmit="login(event)">
           <input type="hidden" name="mode" value="${isRegister ? "register" : "login"}">
           ${isRegister ? '<div class="field"><label for="name">Nama lengkap</label><input id="name" name="name" required autocomplete="name"></div>' : ""}
+          ${isRegister ? '<div class="field"><label for="whatsapp">No. Whatsapp</label><input id="whatsapp" name="whatsapp" type="tel" required inputmode="tel" autocomplete="tel" placeholder="Contoh: 081234567890"></div>' : ""}
           ${isRegister ? '<div class="field"><label for="inviteCode">Kode Undangan / Kode Personal</label><input id="inviteCode" name="inviteCode" required autocomplete="one-time-code" placeholder="Masukkan kode dari admin/owner"></div>' : ""}
           <div class="field">
             <label for="email">Email</label>
