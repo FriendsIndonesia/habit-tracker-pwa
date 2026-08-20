@@ -74,14 +74,47 @@ function getInvitationCodes() {
   if (sheet.getLastRow() === 1) {
     DEFAULT_INVITE_CODES.forEach((code) => sheet.appendRow([code, true, "Markaz Dakwah Digital", "Kode awal admin"]));
   }
-  const rows = sheet.getDataRange().getValues().slice(1);
+  const values = sheet.getDataRange().getValues();
+  const firstRow = values[0] || [];
+  const headers = firstRow.map((cell) => normalizeHeader(cell));
+  const hasHeader = headers.includes("code") || headers.includes("kode") || headers.includes("invite_code") || headers.includes("kode_undangan");
+  const codeIndex = findColumnIndex(headers, ["code", "kode", "invite_code", "kode_undangan", "kode_personal"], 0);
+  const activeIndex = findColumnIndex(headers, ["active", "aktif", "status"], hasHeader ? -1 : 1);
+  const ownerIndex = findColumnIndex(headers, ["owner", "admin", "pemilik"], 2);
+  const rows = hasHeader ? values.slice(1) : values;
   return rows
-    .map((row) => ({
-      code: String(row[0] || "").trim().toUpperCase(),
-      active: row[1] === true || String(row[1]).toLowerCase() === "true" || String(row[1]).toLowerCase() === "active",
-      owner: row[2] || "Admin"
-    }))
+    .map((row) => {
+      const activeValue = activeIndex >= 0 ? row[activeIndex] : "";
+      return {
+        code: String(row[codeIndex] || "").trim().toUpperCase(),
+        active: isInviteCodeActive(activeValue),
+        owner: row[ownerIndex] || "Admin"
+      };
+    })
     .filter((item) => item.code);
+}
+
+function normalizeHeader(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^\w]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function findColumnIndex(headers, names, fallback) {
+  const index = names
+    .map((name) => headers.indexOf(name))
+    .find((item) => item >= 0);
+  return index >= 0 ? index : fallback;
+}
+
+function isInviteCodeActive(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return true;
+  return ["true", "active", "aktif", "ya", "yes", "y", "1", "valid", "tersedia", "available"].includes(normalized);
 }
 
 function sendPasswordRecoveryEmail(payload) {
