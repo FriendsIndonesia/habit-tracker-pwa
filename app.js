@@ -325,8 +325,8 @@ function normalizeState(nextState) {
   nextState.hiddenSuggestions = nextState.hiddenSuggestions || [];
   nextState.pendingUser = nextState.pendingUser || null;
   nextState.otp = nextState.otp || null;
-  if (nextState.user && typeof nextState.user.otpVerified === "undefined") {
-    nextState.user.otpVerified = true;
+  if (nextState.user && typeof nextState.user.invitationVerified === "undefined") {
+    nextState.user.invitationVerified = typeof nextState.user.otpVerified === "boolean" ? nextState.user.otpVerified : true;
     nextState.user.registeredAt = nextState.user.registeredAt || new Date().toISOString();
   }
   nextState.impacts = nextState.impacts?.length ? nextState.impacts : structuredClone(demoState.impacts);
@@ -362,14 +362,65 @@ function syncWithGoogleWorkspace(action, payload) {
   }).catch(() => {});
 }
 
+function requestJsonp(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `habitInviteCallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    const separator = url.includes("?") ? "&" : "?";
+    const script = document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Request timeout"));
+    }, 8000);
+    function cleanup() {
+      window.clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+    window[callbackName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Request failed"));
+    };
+    script.src = `${url}${separator}callback=${callbackName}`;
+    document.head.appendChild(script);
+  });
+}
+
+async function validateInvitationCode(code, email) {
+  const normalizedCode = code.trim().toUpperCase();
+  if (appConfig.googleAppsScriptUrl) {
+    try {
+      const query = new URLSearchParams({
+        action: "validate_invite",
+        code: normalizedCode,
+        email: email || ""
+      });
+      const response = await requestJsonp(`${appConfig.googleAppsScriptUrl}?${query.toString()}`);
+      return response || { valid: false };
+    } catch (error) {
+      console.warn("Invite validation fallback used", error);
+    }
+  }
+  const localCodes = ["MARKAZ2026", "HABIT2026", "MDD-ACCESS-2026"];
+  return {
+    ok: true,
+    valid: localCodes.includes(normalizedCode),
+    owner: "Markaz Dakwah Digital",
+    message: localCodes.includes(normalizedCode) ? "Kode valid." : "Kode undangan tidak ditemukan."
+  };
+}
+
 function navigate(route) {
-  const publicRoutes = ["login", "register", "otp"];
-  if (!publicRoutes.includes(route) && !state.user?.otpVerified) {
-    state.route = state.pendingUser ? "otp" : "register";
+  const publicRoutes = ["login", "register"];
+  if (!publicRoutes.includes(route) && !state.user?.invitationVerified) {
+    state.route = "register";
     document.body.classList.remove("mobile-nav-open");
     saveState();
     render();
-    toast(state.pendingUser ? "Masukkan kode OTP terlebih dahulu." : "Daftar dan verifikasi OTP WhatsApp terlebih dahulu.");
+    toast("Masukkan kode undangan dari admin terlebih dahulu.");
     return;
   }
   state.route = route;
@@ -454,55 +505,57 @@ function timeLabel(time) {
   return { Morning: "Pagi", Afternoon: "Siang/Sore", Evening: "Malam" }[time] || time;
 }
 
-function login(event) {
+async function login(event) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const mode = form.get("mode") || "login";
   const email = form.get("email")?.trim();
   const password = form.get("password")?.trim();
-  const phone = form.get("whatsapp")?.trim();
+  const inviteCode = form.get("inviteCode")?.trim();
   if (!email || !password) {
     toast("Isi email dan password terlebih dahulu.");
     return;
   }
   if (mode === "register") {
-    if (!phone) {
-      toast("Isi nomor WhatsApp terlebih dahulu untuk menerima OTP.");
+    if (!inviteCode) {
+      toast("Isi kode undangan dari admin terlebih dahulu.");
       return;
     }
     if (form.get("confirm") !== password) {
       toast("Konfirmasi password belum sama.");
       return;
     }
-    const otpCode = String(Math.floor(100000 + Math.random() * 900000));
-    state.pendingUser = {
+    toast("Memeriksa kode undangan...");
+    const validation = await validateInvitationCode(inviteCode, email);
+    if (!validation.valid) {
+      toast(validation.message || "Kode undangan tidak valid atau sudah tidak aktif.");
+      return;
+    }
+    state.user = {
       name: form.get("name") || "Pengguna Habit Tracker",
       email,
-      phone,
-      passwordHint: "registered",
-      registeredAt: new Date().toISOString()
+      inviteCode,
+      invitationVerified: true,
+      invitationVerifiedAt: new Date().toISOString(),
+      registeredAt: new Date().toISOString(),
+      registeredBy: validation.owner || "admin"
     };
-    state.otp = {
-      code: otpCode,
-      phone,
-      email,
-      expiresAt: Date.now() + 10 * 60 * 1000
-    };
-    state.route = "otp";
+    state.pendingUser = null;
+    state.otp = null;
+    state.route = "onboarding";
     saveState();
-    syncWithGoogleWorkspace("otp_whatsapp_requested", {
+    syncWithGoogleWorkspace("user_registered_invite_verified", {
       email,
-      phone,
-      otpCode,
-      requestedAt: new Date().toISOString(),
-      message: "Kirim kode OTP ini ke WhatsApp pengguna melalui provider WhatsApp API."
+      inviteCode,
+      validatedAt: new Date().toISOString(),
+      owner: validation.owner || "admin"
     });
     render();
-    toast(`Kode OTP dikirim ke WhatsApp ${phone}. Kode demo: ${otpCode}`);
+    toast("Kode undangan valid. Silakan susun sistem pertumbuhan pertama.");
     return;
   }
-  if (!state.user?.otpVerified || state.user.email !== email) {
-    toast("Akun belum terdaftar atau belum verifikasi OTP WhatsApp.");
+  if (!state.user?.invitationVerified || state.user.email !== email) {
+    toast("Akun belum terdaftar atau kode undangan belum diverifikasi.");
     state.route = "register";
     saveState();
     render();
@@ -516,68 +569,6 @@ function login(event) {
   saveState();
   render();
   toast("Bismillah. Mari bangun hari yang lebih baik.");
-}
-
-function verifyOtp(event) {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const code = form.get("otp")?.trim();
-  if (!state.pendingUser || !state.otp) {
-    toast("Data pendaftaran belum ditemukan. Silakan daftar ulang.");
-    state.route = "register";
-    saveState();
-    render();
-    return;
-  }
-  if (Date.now() > state.otp.expiresAt) {
-    toast("Kode OTP sudah kedaluwarsa. Kirim ulang OTP.");
-    return;
-  }
-  if (code !== state.otp.code) {
-    toast("Kode OTP belum sesuai.");
-    return;
-  }
-  state.user = {
-    name: state.pendingUser.name,
-    email: state.pendingUser.email,
-    phone: state.pendingUser.phone,
-    registeredAt: state.pendingUser.registeredAt,
-    otpVerified: true,
-    otpVerifiedAt: new Date().toISOString()
-  };
-  state.pendingUser = null;
-  state.otp = null;
-  state.route = "onboarding";
-  saveState();
-  syncWithGoogleWorkspace("user_registered_otp_verified", state.user);
-  render();
-  toast("Verifikasi OTP berhasil. Silakan susun sistem pertumbuhan pertama.");
-}
-
-function resendOtp() {
-  if (!state.pendingUser) {
-    toast("Silakan isi form pendaftaran terlebih dahulu.");
-    state.route = "register";
-    saveState();
-    render();
-    return;
-  }
-  const otpCode = String(Math.floor(100000 + Math.random() * 900000));
-  state.otp = {
-    code: otpCode,
-    phone: state.pendingUser.phone,
-    email: state.pendingUser.email,
-    expiresAt: Date.now() + 10 * 60 * 1000
-  };
-  saveState();
-  syncWithGoogleWorkspace("otp_whatsapp_requested", {
-    email: state.pendingUser.email,
-    phone: state.pendingUser.phone,
-    otpCode,
-    requestedAt: new Date().toISOString(),
-    message: "Kirim ulang kode OTP ini ke WhatsApp pengguna melalui provider WhatsApp API."
-  });
-  toast(`OTP baru dikirim ke WhatsApp ${state.pendingUser.phone}. Kode demo: ${otpCode}`);
 }
 
 function togglePasswordVisibility(id) {
@@ -972,7 +963,7 @@ function authView(mode = "login") {
         <form onsubmit="login(event)">
           <input type="hidden" name="mode" value="${isRegister ? "register" : "login"}">
           ${isRegister ? '<div class="field"><label for="name">Nama lengkap</label><input id="name" name="name" required autocomplete="name"></div>' : ""}
-          ${isRegister ? '<div class="field"><label for="whatsapp">Nomor WhatsApp</label><input id="whatsapp" name="whatsapp" type="tel" required inputmode="tel" placeholder="Contoh: 6281234567890" autocomplete="tel"></div>' : ""}
+          ${isRegister ? '<div class="field"><label for="inviteCode">Kode Undangan / Kode Personal</label><input id="inviteCode" name="inviteCode" required autocomplete="one-time-code" placeholder="Masukkan kode dari admin/owner"></div>' : ""}
           <div class="field">
             <label for="email">Email</label>
             <input id="email" name="email" type="email" required autocomplete="email">
@@ -994,42 +985,6 @@ function authView(mode = "login") {
         <p class="muted">${isRegister ? "Sudah punya akun?" : "Belum punya akun?"}
           <button class="link-button" onclick="navigate('${isRegister ? "login" : "register"}')">${isRegister ? "Masuk" : "Buat akun"}</button>
         </p>
-        <p class="developer-credit auth-credit">Developed by Markaz Dakwah Digital</p>
-      </section>
-    </main>
-  `;
-}
-
-function otpView() {
-  return `
-    <main class="auth-layout">
-      <section class="brand-panel">
-        <div class="logo-lockup">
-          <img src="./assets/logo.png" alt="Habit Tracker logo">
-          <div>
-            <p class="brand-title">HABIT TRACKER</p>
-            <span class="brand-subtitle">Better Habits, Better Life</span>
-          </div>
-        </div>
-        <div class="brand-statement">
-          <p>Verifikasi nomor WhatsApp menjaga akses dashboard hanya untuk pengguna yang sudah mendaftar.</p>
-        </div>
-        <p class="developer-credit">Developed by Markaz Dakwah Digital</p>
-      </section>
-      <section class="auth-card" aria-label="Verifikasi OTP WhatsApp">
-        <h2>Verifikasi OTP WhatsApp</h2>
-        <p class="muted">Masukkan kode OTP yang dikirim ke ${escapeHtml(state.pendingUser?.phone || "nomor WhatsApp kamu")}.</p>
-        <form onsubmit="verifyOtp(event)">
-          <div class="field">
-            <label for="otp">Kode OTP</label>
-            <input id="otp" name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="6 digit kode OTP">
-          </div>
-          <button class="btn primary full" type="submit">Verifikasi & Masuk</button>
-        </form>
-        <div class="row-between otp-actions">
-          <button class="link-button" type="button" onclick="resendOtp()">Kirim ulang OTP</button>
-          <button class="link-button" type="button" onclick="navigate('register')">Ganti data</button>
-        </div>
         <p class="developer-credit auth-credit">Developed by Markaz Dakwah Digital</p>
       </section>
     </main>
@@ -1700,13 +1655,12 @@ function profileView() {
 
 function render() {
   const app = document.querySelector("#app");
-  const publicRoutes = ["login", "register", "otp"];
-  if (!publicRoutes.includes(state.route) && !state.user?.otpVerified) {
-    state.route = state.pendingUser ? "otp" : "register";
+  const publicRoutes = ["login", "register"];
+  if (!publicRoutes.includes(state.route) && !state.user?.invitationVerified) {
+    state.route = "register";
   }
   if (state.route === "login") app.innerHTML = authView("login");
   else if (state.route === "register") app.innerHTML = authView("register");
-  else if (state.route === "otp") app.innerHTML = otpView();
   else if (state.route === "onboarding") app.innerHTML = onboardingView();
   else if (state.route === "dashboard") app.innerHTML = dashboardView();
   else if (state.route === "today") app.innerHTML = todayView();
@@ -1725,8 +1679,6 @@ function render() {
 
 window.navigate = navigate;
 window.login = login;
-window.verifyOtp = verifyOtp;
-window.resendOtp = resendOtp;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.recoverPassword = recoverPassword;
 window.completeOnboarding = completeOnboarding;
