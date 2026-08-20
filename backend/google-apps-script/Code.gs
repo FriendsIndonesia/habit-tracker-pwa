@@ -1,6 +1,6 @@
 const SPREADSHEET_NAME = "Habit Tracker Backend";
 const OWNER_EMAIL = "friendsindonesia28@gmail.com";
-const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "password_recovery_requested"];
+const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "state_saved", "password_recovery_requested"];
 
 function doGet() {
   return jsonResponse({
@@ -18,7 +18,10 @@ function doPost(event) {
     sheet.appendRow([
       new Date().toISOString(),
       body.workspaceAccount || OWNER_EMAIL,
+      body.source || "habit-tracker-pwa",
+      body.activeRoute || "",
       body.action || "state_saved",
+      JSON.stringify(body.menuItems || []),
       JSON.stringify(body.payload || {})
     ]);
 
@@ -53,7 +56,7 @@ function setupHabitTrackerBackend() {
   TABLES.forEach((name) => {
     const sheet = getOrCreateSheet(name);
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["created_at", "workspace_account", "action", "payload_json"]);
+      sheet.appendRow(["created_at", "workspace_account", "source", "active_route", "action", "menu_items_json", "payload_json"]);
     }
   });
   return spreadsheet.getUrl();
