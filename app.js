@@ -464,6 +464,10 @@ function userDisplayName() {
   return state.user?.name || "Abu Adzka";
 }
 
+function isOwnerUser() {
+  return (state.user?.email || "").toLowerCase() === (appConfig.workspaceAccount || "").toLowerCase();
+}
+
 function primaryArea() {
   return state.selectedAreas?.[0] || "Ibadah & Spiritual";
 }
@@ -551,6 +555,7 @@ async function login(event) {
     state.route = "onboarding";
     saveState();
     syncWithGoogleWorkspace("user_registered_invite_verified", {
+      name: form.get("name") || "Pengguna Habit Tracker",
       email,
       whatsapp,
       inviteCode,
@@ -596,6 +601,21 @@ function recoverPassword() {
     message: "Kirim instruksi pemulihan password atau kode verifikasi ke email pengguna."
   });
   toast(`Instruksi pemulihan password dikirim ke ${email}.`);
+}
+
+function downloadOwnerUsersPdf() {
+  if (!isOwnerUser()) {
+    toast("Fitur ini hanya untuk owner aplikasi.");
+    return;
+  }
+  if (!appConfig.googleAppsScriptUrl) {
+    toast("Backend Google Apps Script belum terhubung.");
+    return;
+  }
+  const ownerKey = window.prompt("Masukkan kode owner untuk download database PDF:");
+  if (!ownerKey) return;
+  const url = `${appConfig.googleAppsScriptUrl}?action=export_users_pdf&owner_key=${encodeURIComponent(ownerKey.trim())}`;
+  window.open(url, "_blank", "noopener");
 }
 
 function completeOnboarding(event) {
@@ -1657,6 +1677,15 @@ function profileView() {
         <section class="metric-card"><span class="muted">Habit aktif</span><strong>${state.habits.length}</strong></section>
         <section class="metric-card"><span class="muted">Skor hari ini</span><strong>${score.score}%</strong></section>
       </div>
+      ${isOwnerUser() ? `
+        <div class="owner-export-box">
+          <div>
+            <strong>Database Pengguna</strong>
+            <p class="muted">Download data nama, email, dan No. Whatsapp pengguna dalam format PDF.</p>
+          </div>
+          <button class="btn primary" onclick="downloadOwnerUsersPdf()">Download Database PDF</button>
+        </div>
+      ` : ""}
     </section>
   `);
 }
@@ -1689,6 +1718,7 @@ window.navigate = navigate;
 window.login = login;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.recoverPassword = recoverPassword;
+window.downloadOwnerUsersPdf = downloadOwnerUsersPdf;
 window.completeOnboarding = completeOnboarding;
 window.downloadDashboardPdf = downloadDashboardPdf;
 window.toggleHabit = toggleHabit;
