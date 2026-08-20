@@ -1,4 +1,4 @@
-const SPREADSHEET_NAME = "Habit Tracker Backend";
+const SPREADSHEET_NAME = "Habit Tracker Backend V2";
 const OWNER_EMAIL = "friendsindonesia28@gmail.com";
 const DEFAULT_INVITE_CODES = ["MARKAZ2026", "HABIT2026", "MDD-ACCESS-2026"];
 const TABLES = ["users", "goals", "systems", "habits", "habit_logs", "snapshots", "state_saved", "password_recovery_requested", "invite_codes", "invite_code_checked", "user_registered_invite_verified"];
