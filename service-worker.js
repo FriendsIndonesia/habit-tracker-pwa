@@ -1,4 +1,4 @@
-const CACHE_NAME = "habit-tracker-phase1-v13-owner-pdf-export";
+const CACHE_NAME = "habit-tracker-phase1-v14-mdd-invite-fallback";
 const ASSETS = [
   "./",
   "./index.html",
