@@ -1450,9 +1450,21 @@ button {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.mobile-nav-head img {
+  width: 2.8rem;
+  height: 2.8rem;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 0 18px rgba(18, 123, 255, 0.28);
+}
+
 .mobile-nav-head strong,
 .mobile-nav-head small {
   display: block;
+}
+
+.otp-actions {
+  margin-top: 0.9rem;
 }
 
 .mobile-nav-head strong {
@@ -1804,5 +1816,42 @@ button {
 
   .profile-summary {
     grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .sidebar,
+  .mobile-menu-button,
+  .mobile-nav,
+  .mobile-nav-scrim,
+  .top-header .row-between,
+  .quick-add,
+  .link-button,
+  .btn {
+    display: none !important;
+  }
+
+  .main-layout {
+    display: block;
+  }
+
+  .main-content,
+  .panel,
+  .metric-card,
+  .item-card {
+    color: #111827;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border-color: #cbd5e1;
+  }
+
+  .panel::before,
+  .metric-card::before,
+  .item-card::before {
+    display: none;
   }
 }
