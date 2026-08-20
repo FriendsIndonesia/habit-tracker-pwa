@@ -73,6 +73,8 @@ const activitySuggestions = {
 const demoState = {
   route: "login",
   user: null,
+  pendingUser: null,
+  otp: null,
   avatarUrl: "",
   onboardingDone: false,
   selectedAreas: ["Ibadah & Spiritual", "Kesehatan", "Ilmu, Akhlak & Pengembangan Diri"],
@@ -321,6 +323,12 @@ function normalizeState(nextState) {
   nextState.systems = nextState.systems?.length ? nextState.systems : structuredClone(demoState.systems);
   nextState.logs = nextState.logs || [];
   nextState.hiddenSuggestions = nextState.hiddenSuggestions || [];
+  nextState.pendingUser = nextState.pendingUser || null;
+  nextState.otp = nextState.otp || null;
+  if (nextState.user && typeof nextState.user.otpVerified === "undefined") {
+    nextState.user.otpVerified = true;
+    nextState.user.registeredAt = nextState.user.registeredAt || new Date().toISOString();
+  }
   nextState.impacts = nextState.impacts?.length ? nextState.impacts : structuredClone(demoState.impacts);
   nextState.reviews = nextState.reviews?.length ? nextState.reviews : structuredClone(demoState.reviews);
   nextState.journalEntries = nextState.journalEntries?.length ? nextState.journalEntries : structuredClone(demoState.journalEntries);
@@ -355,6 +363,15 @@ function syncWithGoogleWorkspace(action, payload) {
 }
 
 function navigate(route) {
+  const publicRoutes = ["login", "register", "otp"];
+  if (!publicRoutes.includes(route) && !state.user?.otpVerified) {
+    state.route = state.pendingUser ? "otp" : "register";
+    document.body.classList.remove("mobile-nav-open");
+    saveState();
+    render();
+    toast(state.pendingUser ? "Masukkan kode OTP terlebih dahulu." : "Daftar dan verifikasi OTP WhatsApp terlebih dahulu.");
+    return;
+  }
   state.route = route;
   document.body.classList.remove("mobile-nav-open");
   saveState();
@@ -371,6 +388,16 @@ function toast(message) {
   element.textContent = message;
   element.classList.add("show");
   window.setTimeout(() => element.classList.remove("show"), 2200);
+}
+
+function downloadDashboardPdf() {
+  if (state.route !== "dashboard") state.route = "dashboard";
+  saveState();
+  render();
+  window.setTimeout(() => {
+    toast("Pilih Save as PDF pada dialog print untuk menyimpan laporan dashboard.");
+    window.print();
+  }, 250);
 }
 
 function escapeHtml(value) {
@@ -430,20 +457,127 @@ function timeLabel(time) {
 function login(event) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
+  const mode = form.get("mode") || "login";
   const email = form.get("email")?.trim();
   const password = form.get("password")?.trim();
+  const phone = form.get("whatsapp")?.trim();
   if (!email || !password) {
     toast("Isi email dan password terlebih dahulu.");
     return;
   }
+  if (mode === "register") {
+    if (!phone) {
+      toast("Isi nomor WhatsApp terlebih dahulu untuk menerima OTP.");
+      return;
+    }
+    if (form.get("confirm") !== password) {
+      toast("Konfirmasi password belum sama.");
+      return;
+    }
+    const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+    state.pendingUser = {
+      name: form.get("name") || "Pengguna Habit Tracker",
+      email,
+      phone,
+      passwordHint: "registered",
+      registeredAt: new Date().toISOString()
+    };
+    state.otp = {
+      code: otpCode,
+      phone,
+      email,
+      expiresAt: Date.now() + 10 * 60 * 1000
+    };
+    state.route = "otp";
+    saveState();
+    syncWithGoogleWorkspace("otp_whatsapp_requested", {
+      email,
+      phone,
+      otpCode,
+      requestedAt: new Date().toISOString(),
+      message: "Kirim kode OTP ini ke WhatsApp pengguna melalui provider WhatsApp API."
+    });
+    render();
+    toast(`Kode OTP dikirim ke WhatsApp ${phone}. Kode demo: ${otpCode}`);
+    return;
+  }
+  if (!state.user?.otpVerified || state.user.email !== email) {
+    toast("Akun belum terdaftar atau belum verifikasi OTP WhatsApp.");
+    state.route = "register";
+    saveState();
+    render();
+    return;
+  }
   state.user = {
-    name: form.get("name") || "Abu Adzka",
+    ...state.user,
     email
   };
   state.route = "onboarding";
   saveState();
   render();
   toast("Bismillah. Mari bangun hari yang lebih baik.");
+}
+
+function verifyOtp(event) {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const code = form.get("otp")?.trim();
+  if (!state.pendingUser || !state.otp) {
+    toast("Data pendaftaran belum ditemukan. Silakan daftar ulang.");
+    state.route = "register";
+    saveState();
+    render();
+    return;
+  }
+  if (Date.now() > state.otp.expiresAt) {
+    toast("Kode OTP sudah kedaluwarsa. Kirim ulang OTP.");
+    return;
+  }
+  if (code !== state.otp.code) {
+    toast("Kode OTP belum sesuai.");
+    return;
+  }
+  state.user = {
+    name: state.pendingUser.name,
+    email: state.pendingUser.email,
+    phone: state.pendingUser.phone,
+    registeredAt: state.pendingUser.registeredAt,
+    otpVerified: true,
+    otpVerifiedAt: new Date().toISOString()
+  };
+  state.pendingUser = null;
+  state.otp = null;
+  state.route = "onboarding";
+  saveState();
+  syncWithGoogleWorkspace("user_registered_otp_verified", state.user);
+  render();
+  toast("Verifikasi OTP berhasil. Silakan susun sistem pertumbuhan pertama.");
+}
+
+function resendOtp() {
+  if (!state.pendingUser) {
+    toast("Silakan isi form pendaftaran terlebih dahulu.");
+    state.route = "register";
+    saveState();
+    render();
+    return;
+  }
+  const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+  state.otp = {
+    code: otpCode,
+    phone: state.pendingUser.phone,
+    email: state.pendingUser.email,
+    expiresAt: Date.now() + 10 * 60 * 1000
+  };
+  saveState();
+  syncWithGoogleWorkspace("otp_whatsapp_requested", {
+    email: state.pendingUser.email,
+    phone: state.pendingUser.phone,
+    otpCode,
+    requestedAt: new Date().toISOString(),
+    message: "Kirim ulang kode OTP ini ke WhatsApp pengguna melalui provider WhatsApp API."
+  });
+  toast(`OTP baru dikirim ke WhatsApp ${state.pendingUser.phone}. Kode demo: ${otpCode}`);
 }
 
 function togglePasswordVisibility(id) {
@@ -615,7 +749,7 @@ const quickAddConfig = {
     title: "Update Profil",
     fieldLabel: "Catatan profil",
     placeholder: "Contoh: Fokus utama bulan ini adalah kesehatan dan ibadah",
-    helper: "Catat preferensi, identitas pertumbuhan, atau fokus pribadi."
+    helper: "Catat preferensi atau fokus pribadi."
   }
 };
 
@@ -836,7 +970,9 @@ function authView(mode = "login") {
         <h2>${isRegister ? "Buat akun baru" : "Assalamu'alaikum"}</h2>
         <p class="muted">${isRegister ? "Mulai dari satu tujuan yang bermakna." : "Lanjutkan ikhtiar kecil hari ini dengan lebih tertata."}</p>
         <form onsubmit="login(event)">
+          <input type="hidden" name="mode" value="${isRegister ? "register" : "login"}">
           ${isRegister ? '<div class="field"><label for="name">Nama lengkap</label><input id="name" name="name" required autocomplete="name"></div>' : ""}
+          ${isRegister ? '<div class="field"><label for="whatsapp">Nomor WhatsApp</label><input id="whatsapp" name="whatsapp" type="tel" required inputmode="tel" placeholder="Contoh: 6281234567890" autocomplete="tel"></div>' : ""}
           <div class="field">
             <label for="email">Email</label>
             <input id="email" name="email" type="email" required autocomplete="email">
@@ -848,7 +984,7 @@ function authView(mode = "login") {
               <button class="eye-button" type="button" onclick="togglePasswordVisibility('password')" aria-label="Tampilkan atau sembunyikan password">👁</button>
             </div>
           </div>
-          ${isRegister ? '<div class="field"><label for="confirm">Konfirmasi password</label><div class="password-field"><input id="confirm" type="password" required autocomplete="new-password"><button class="eye-button" type="button" onclick="togglePasswordVisibility(\'confirm\')" aria-label="Tampilkan atau sembunyikan konfirmasi password">👁</button></div></div>' : ""}
+          ${isRegister ? '<div class="field"><label for="confirm">Konfirmasi password</label><div class="password-field"><input id="confirm" name="confirm" type="password" required autocomplete="new-password"><button class="eye-button" type="button" onclick="togglePasswordVisibility(\'confirm\')" aria-label="Tampilkan atau sembunyikan konfirmasi password">👁</button></div></div>' : ""}
           <div class="row-between">
             <label class="check-row"><input type="checkbox" checked> Ingat saya</label>
             <button class="link-button" type="button" onclick="recoverPassword()">Lupa password</button>
@@ -858,6 +994,42 @@ function authView(mode = "login") {
         <p class="muted">${isRegister ? "Sudah punya akun?" : "Belum punya akun?"}
           <button class="link-button" onclick="navigate('${isRegister ? "login" : "register"}')">${isRegister ? "Masuk" : "Buat akun"}</button>
         </p>
+        <p class="developer-credit auth-credit">Developed by Markaz Dakwah Digital</p>
+      </section>
+    </main>
+  `;
+}
+
+function otpView() {
+  return `
+    <main class="auth-layout">
+      <section class="brand-panel">
+        <div class="logo-lockup">
+          <img src="./assets/logo.png" alt="Habit Tracker logo">
+          <div>
+            <p class="brand-title">HABIT TRACKER</p>
+            <span class="brand-subtitle">Better Habits, Better Life</span>
+          </div>
+        </div>
+        <div class="brand-statement">
+          <p>Verifikasi nomor WhatsApp menjaga akses dashboard hanya untuk pengguna yang sudah mendaftar.</p>
+        </div>
+        <p class="developer-credit">Developed by Markaz Dakwah Digital</p>
+      </section>
+      <section class="auth-card" aria-label="Verifikasi OTP WhatsApp">
+        <h2>Verifikasi OTP WhatsApp</h2>
+        <p class="muted">Masukkan kode OTP yang dikirim ke ${escapeHtml(state.pendingUser?.phone || "nomor WhatsApp kamu")}.</p>
+        <form onsubmit="verifyOtp(event)">
+          <div class="field">
+            <label for="otp">Kode OTP</label>
+            <input id="otp" name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="6 digit kode OTP">
+          </div>
+          <button class="btn primary full" type="submit">Verifikasi & Masuk</button>
+        </form>
+        <div class="row-between otp-actions">
+          <button class="link-button" type="button" onclick="resendOtp()">Kirim ulang OTP</button>
+          <button class="link-button" type="button" onclick="navigate('register')">Ganti data</button>
+        </div>
         <p class="developer-credit auth-credit">Developed by Markaz Dakwah Digital</p>
       </section>
     </main>
@@ -958,6 +1130,7 @@ function shell(content) {
       <button class="mobile-menu-button" onclick="toggleMobileNav()" aria-label="Buka menu navigasi"><span>☰</span> Menu</button>
       <nav class="mobile-nav" aria-label="Mobile navigation">
         <div class="mobile-nav-head">
+          <img src="./assets/logo.png" alt="Habit Tracker logo">
           <div>
             <strong>Habit Tracker</strong>
             <small>Menu utama</small>
@@ -986,7 +1159,6 @@ function topHeader() {
       </div>
       <div class="row-between">
         <button class="btn ghost" onclick="toast('Belum ada notifikasi baru.')">Notifikasi</button>
-        <div class="flag-indonesia" aria-label="Bendera Indonesia berkibar"><span></span></div>
         <button class="avatar-upload" onclick="triggerAvatarUpload()" aria-label="Upload foto profil">
           ${state.avatarUrl ? `<img src="${state.avatarUrl}" alt="Foto profil">` : `<span>Foto</span>`}
         </button>
@@ -1002,9 +1174,10 @@ function dashboardView() {
     <section class="panel hero-analytics-panel">
       <div class="row-between">
         <div>
-          <h2>Smart Scoring Analytics</h2>
+          <h2>Scoring Analytics</h2>
           <p class="muted">Histogram, line chart, pie 3D, dan tabel skor langsung menjelaskan progres hari ini.</p>
         </div>
+        <button class="btn primary" onclick="downloadDashboardPdf()">Download Pdf</button>
       </div>
       ${smartArt(score.score)}
       <div class="analytics-grid">
@@ -1043,7 +1216,7 @@ function dashboardView() {
     <section class="panel analytics-panel" style="margin-top:1rem">
       <div class="row-between">
         <div>
-          <h2>Tabel Scoring 3D</h2>
+          <h2>Tabel Scoring</h2>
           <p class="muted">Ringkasan formula scoring yang dipakai aplikasi.</p>
         </div>
       </div>
@@ -1183,7 +1356,7 @@ function histogram3d() {
   ];
   return `
     <article class="chart-card">
-      <h3>Histogram Life Area</h3>
+      <h3>Life Area</h3>
       <div class="chart-3d" aria-label="Histogram skor life area">
       ${values
         .map(
@@ -1212,7 +1385,7 @@ function lineChart3d() {
   const polyline = points.map(([x, y]) => `${x},${100 - y}`).join(" ");
   return `
     <article class="chart-card">
-      <h3>Line Progress Pekanan</h3>
+      <h3>Progress Pekanan</h3>
       <div class="line-chart-3d" aria-label="Line chart progress pekanan">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <defs>
@@ -1235,7 +1408,7 @@ function pieChart3d(score) {
   const remaining = 100 - score;
   return `
     <article class="chart-card">
-      <h3>Pie Komposisi Skor</h3>
+      <h3>Komposisi Skor</h3>
       <div class="pie-3d" style="--complete:${score * 3.6}deg" aria-label="Pie chart komposisi skor">
         <div class="pie-core">
           <strong>${score}%</strong>
@@ -1317,7 +1490,7 @@ function habitsView() {
   return shell(`
     <section class="panel">
       <div class="row-between"><h2>Kebiasaan</h2><button class="btn primary" onclick="addQuick('Habit')">+ Kebiasaan Baru</button></div>
-      ${habitList(state.habits)}
+      ${habitList(state.habits, { deletable: true })}
     </section>
   `);
 }
@@ -1504,7 +1677,7 @@ function insightsView() {
 function profileView() {
   const score = todayScore();
   return shell(`
-    ${moduleHero("Profil", "Identitas pertumbuhan pengguna: nama, fokus hidup, life area, dan ringkasan perjalanan habit.", "Profile", "Identitas Pengguna")}
+    ${moduleHero("Profil", "Kelola foto profil, nama, life area, dan ringkasan progres kamu.", "Profile", "Profil Pengguna")}
     <section class="panel module-section" style="margin-top:1rem">
       <div class="profile-summary">
         <button class="avatar-upload large-avatar" onclick="triggerAvatarUpload()" aria-label="Upload foto profil">
@@ -1512,7 +1685,6 @@ function profileView() {
         </button>
         <div>
           <h2>${escapeHtml(userDisplayName())}</h2>
-          <p class="muted">${escapeHtml(state.user?.email || appConfig.workspaceAccount || "friendsindonesia28@gmail.com")}</p>
           <p>${escapeHtml(state.vision)}</p>
           <p class="muted">${escapeHtml(state.profileNote || "Fokus saat ini: menjaga amanah tubuh, ilmu, dan produktivitas dengan habit kecil yang istiqamah.")}</p>
         </div>
@@ -1528,8 +1700,13 @@ function profileView() {
 
 function render() {
   const app = document.querySelector("#app");
+  const publicRoutes = ["login", "register", "otp"];
+  if (!publicRoutes.includes(state.route) && !state.user?.otpVerified) {
+    state.route = state.pendingUser ? "otp" : "register";
+  }
   if (state.route === "login") app.innerHTML = authView("login");
   else if (state.route === "register") app.innerHTML = authView("register");
+  else if (state.route === "otp") app.innerHTML = otpView();
   else if (state.route === "onboarding") app.innerHTML = onboardingView();
   else if (state.route === "dashboard") app.innerHTML = dashboardView();
   else if (state.route === "today") app.innerHTML = todayView();
@@ -1548,9 +1725,12 @@ function render() {
 
 window.navigate = navigate;
 window.login = login;
+window.verifyOtp = verifyOtp;
+window.resendOtp = resendOtp;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.recoverPassword = recoverPassword;
 window.completeOnboarding = completeOnboarding;
+window.downloadDashboardPdf = downloadDashboardPdf;
 window.toggleHabit = toggleHabit;
 window.deleteHabit = deleteHabit;
 window.addQuick = addQuick;
