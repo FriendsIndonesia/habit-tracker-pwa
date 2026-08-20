@@ -1,0 +1,16 @@
+{
+  "name": "Habit Tracker",
+  "short_name": "Habit",
+  "description": "Personal Growth Operating System",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#07111F",
+  "theme_color": "#07111F",
+  "icons": [
+    {
+      "src": "./assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
