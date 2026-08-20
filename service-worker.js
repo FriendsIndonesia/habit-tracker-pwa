@@ -1,4 +1,4 @@
-const CACHE_NAME = "habit-tracker-phase1-v11-invite-code";
+const CACHE_NAME = "habit-tracker-phase1-v12-whatsapp-register";
 const ASSETS = [
   "./",
   "./index.html",
