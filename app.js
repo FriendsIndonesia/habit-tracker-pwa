@@ -13,20 +13,18 @@ const navItems = [
   ["journal", "Jurnal", "□"],
   ["achievements", "Pencapaian", "★"],
   ["insights", "Insight", "✦"],
-  ["profile", "Profil", "●"],
-  ["settings", "Pengaturan", "⚙"]
+  ["profile", "Profil", "●"]
 ];
 
 const lifeAreas = [
   "Ibadah & Spiritual",
   "Kesehatan",
-  "Ilmu & Belajar",
-  "Amanah Kerja",
-  "Keuangan Berkah",
-  "Keluarga",
+  "Ilmu, Akhlak & Pengembangan Diri",
   "Dakwah",
-  "Produktivitas",
-  "Akhlak & Pengembangan Diri"
+  "Sekolah/Kuliah/Kerja",
+  "Keluarga",
+  "Bisnis & Produktivitas",
+  "Kecukupan Rezeki & Keberkahan"
 ];
 
 const activitySuggestions = {
@@ -40,20 +38,10 @@ const activitySuggestions = {
     Afternoon: ["Jalan Kaki 30 Menit", "Peregangan tubuh", "Kurangi gula/minuman manis"],
     Evening: ["Tidur lebih awal", "Siapkan air minum besok", "Matikan layar 30 menit sebelum tidur"]
   },
-  "Ilmu & Belajar": {
+  "Ilmu, Akhlak & Pengembangan Diri": {
     Morning: ["Baca 5 halaman", "Catat 1 pelajaran", "Dengarkan kajian singkat"],
-    Afternoon: ["Latihan skill 25 menit", "Review catatan", "Tulis rangkuman ilmu"],
-    Evening: ["Membaca Ilmu Bermanfaat", "Rencanakan materi besok", "Bagikan 1 faedah"]
-  },
-  "Amanah Kerja": {
-    Morning: ["Tentukan 3 prioritas", "Rapikan agenda kerja", "Mulai tugas tersulit"],
-    Afternoon: ["Fokus menunaikan amanah", "Follow up pekerjaan penting", "Rapikan inbox"],
-    Evening: ["Evaluasi amanah harian", "Siapkan agenda besok", "Catat kendala utama"]
-  },
-  "Keuangan Berkah": {
-    Morning: ["Cek niat belanja hari ini", "Catat rencana pengeluaran", "Sisihkan sedekah"],
-    Afternoon: ["Catat transaksi", "Hindari pembelian impulsif", "Review anggaran"],
-    Evening: ["Rekap pengeluaran", "Doakan keberkahan rezeki", "Rencana hemat besok"]
+    Afternoon: ["Latihan adab dan skill 25 menit", "Review catatan", "Tulis rangkuman ilmu"],
+    Evening: ["Muhasabah akhlak harian", "Membaca Ilmu Bermanfaat", "Bagikan 1 faedah"]
   },
   Keluarga: {
     Morning: ["Sapa keluarga dengan baik", "Bantu satu pekerjaan rumah", "Doakan keluarga"],
@@ -65,15 +53,20 @@ const activitySuggestions = {
     Afternoon: ["Bagikan kebaikan", "Bantu satu orang", "Belajar materi dakwah"],
     Evening: ["Evaluasi adab komunikasi", "Catat ide dakwah", "Doakan penerima manfaat"]
   },
-  Produktivitas: {
+  "Sekolah/Kuliah/Kerja": {
+    Morning: ["Tentukan 3 prioritas", "Rapikan agenda belajar/kerja", "Mulai tugas tersulit"],
+    Afternoon: ["Fokus menunaikan amanah", "Follow up tugas penting", "Rapikan catatan/inbox"],
+    Evening: ["Evaluasi amanah harian", "Siapkan agenda besok", "Catat kendala utama"]
+  },
+  "Bisnis & Produktivitas": {
     Morning: ["Niat & Rencana Pagi", "Blok waktu fokus", "Rapikan meja kerja"],
     Afternoon: ["Fokus Menunaikan Amanah", "Istirahat berkualitas", "Selesaikan tugas kecil"],
     Evening: ["Review pekerjaan", "Tentukan prioritas besok", "Tutup hari tanpa menunda"]
   },
-  "Akhlak & Pengembangan Diri": {
-    Morning: ["Latih sabar sejak pagi", "Baca afirmasi Islami", "Tulis niat perbaikan"],
-    Afternoon: ["Jaga lisan", "Beri apresiasi", "Latih syukur"],
-    Evening: ["Muhasabah Harian", "Catat 1 kesalahan dan perbaikan", "Istighfar 100x"]
+  "Kecukupan Rezeki & Keberkahan": {
+    Morning: ["Cek niat belanja hari ini", "Catat rencana pengeluaran", "Sisihkan sedekah"],
+    Afternoon: ["Catat transaksi", "Hindari pembelian impulsif", "Review anggaran"],
+    Evening: ["Rekap pengeluaran", "Doakan keberkahan rezeki", "Rencana hemat besok"]
   }
 };
 
@@ -82,7 +75,7 @@ const demoState = {
   user: null,
   avatarUrl: "",
   onboardingDone: false,
-  selectedAreas: ["Ibadah & Spiritual", "Kesehatan", "Ilmu & Belajar"],
+  selectedAreas: ["Ibadah & Spiritual", "Kesehatan", "Ilmu, Akhlak & Pengembangan Diri"],
   vision: "Menjadi pribadi muslim yang lebih sehat, disiplin, amanah, dan bermanfaat.",
   goals: [
     {
@@ -99,7 +92,7 @@ const demoState = {
     {
       id: "goal-productivity",
       name: "Lebih Produktif dan Tertib",
-      area: "Produktivitas",
+      area: "Bisnis & Produktivitas",
       why: "Menata waktu agar pekerjaan, keluarga, dan ibadah berjalan lebih seimbang.",
       target: 100,
       current: 68,
@@ -110,7 +103,7 @@ const demoState = {
     {
       id: "goal-learning",
       name: "Istiqamah Menuntut Ilmu",
-      area: "Ilmu & Belajar",
+      area: "Ilmu, Akhlak & Pengembangan Diri",
       why: "Menambah ilmu yang bermanfaat dan menguatkan amal harian.",
       target: 100,
       current: 81,
@@ -150,7 +143,7 @@ const demoState = {
     {
       id: "habit-plan",
       name: "Niat & Rencana Pagi",
-      area: "Produktivitas",
+      area: "Bisnis & Produktivitas",
       goalId: "goal-productivity",
       systemId: "system-productivity",
       time: "Morning",
@@ -172,7 +165,7 @@ const demoState = {
     {
       id: "habit-reading",
       name: "Membaca Ilmu Bermanfaat",
-      area: "Ilmu & Belajar",
+      area: "Ilmu, Akhlak & Pengembangan Diri",
       goalId: "goal-learning",
       systemId: "system-productivity",
       time: "Evening",
@@ -183,7 +176,7 @@ const demoState = {
     {
       id: "habit-deep-work",
       name: "Fokus Menunaikan Amanah",
-      area: "Produktivitas",
+      area: "Bisnis & Produktivitas",
       goalId: "goal-productivity",
       systemId: "system-productivity",
       time: "Afternoon",
@@ -194,7 +187,7 @@ const demoState = {
     {
       id: "habit-review",
       name: "Muhasabah Harian",
-      area: "Akhlak & Pengembangan Diri",
+      area: "Ilmu, Akhlak & Pengembangan Diri",
       goalId: "goal-productivity",
       systemId: "system-productivity",
       time: "Evening",
@@ -213,13 +206,13 @@ const demoState = {
     },
     {
       title: "Fokus Kerja Meningkat",
-      area: "Produktivitas",
+      area: "Bisnis & Produktivitas",
       evidence: "Fokus Menunaikan Amanah selesai hari ini dengan streak 7 hari.",
       result: "Tugas penting lebih cepat selesai sebelum sore."
     },
     {
       title: "Ilmu Lebih Terjaga",
-      area: "Ilmu & Belajar",
+      area: "Ilmu, Akhlak & Pengembangan Diri",
       evidence: "Membaca Ilmu Bermanfaat selesai hari ini dengan streak 12 hari.",
       result: "Ada catatan faedah baru untuk diamalkan dan dibagikan."
     }
@@ -310,11 +303,24 @@ function loadState() {
 }
 
 function normalizeState(nextState) {
-  nextState.selectedAreas = nextState.selectedAreas?.length ? nextState.selectedAreas : demoState.selectedAreas;
+  const areaMap = {
+    "Ilmu & Belajar": "Ilmu, Akhlak & Pengembangan Diri",
+    Produktivitas: "Bisnis & Produktivitas",
+    "Amanah Kerja": "Sekolah/Kuliah/Kerja",
+    "Keuangan Berkah": "Kecukupan Rezeki & Keberkahan",
+    "Akhlak & Pengembangan Diri": "Ilmu, Akhlak & Pengembangan Diri"
+  };
+  nextState.selectedAreas = nextState.selectedAreas?.length ? nextState.selectedAreas.map((area) => areaMap[area] || area).filter((area) => lifeAreas.includes(area)) : demoState.selectedAreas;
+  if (!nextState.selectedAreas.length) nextState.selectedAreas = demoState.selectedAreas;
+  [...(nextState.goals || []), ...(nextState.habits || [])].forEach((item) => {
+    if (areaMap[item.area]) item.area = areaMap[item.area];
+  });
+  if (nextState.route === "settings") nextState.route = "dashboard";
   nextState.habits = nextState.habits?.length ? nextState.habits : structuredClone(demoState.habits);
   nextState.goals = nextState.goals?.length ? nextState.goals : structuredClone(demoState.goals);
   nextState.systems = nextState.systems?.length ? nextState.systems : structuredClone(demoState.systems);
   nextState.logs = nextState.logs || [];
+  nextState.hiddenSuggestions = nextState.hiddenSuggestions || [];
   nextState.impacts = nextState.impacts?.length ? nextState.impacts : structuredClone(demoState.impacts);
   nextState.reviews = nextState.reviews?.length ? nextState.reviews : structuredClone(demoState.reviews);
   nextState.journalEntries = nextState.journalEntries?.length ? nextState.journalEntries : structuredClone(demoState.journalEntries);
@@ -371,6 +377,10 @@ function userDisplayName() {
   return state.user?.name || "Abu Adzka";
 }
 
+function primaryArea() {
+  return state.selectedAreas?.[0] || "Ibadah & Spiritual";
+}
+
 function todayScore() {
   const completed = state.habits.filter((habit) => habit.completed).length;
   return {
@@ -411,9 +421,15 @@ function timeLabel(time) {
 function login(event) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
+  const email = form.get("email")?.trim();
+  const password = form.get("password")?.trim();
+  if (!email || !password) {
+    toast("Isi email dan password terlebih dahulu.");
+    return;
+  }
   state.user = {
     name: form.get("name") || "Abu Adzka",
-    email: form.get("email") || "demo@habit.local"
+    email
   };
   state.route = "onboarding";
   saveState();
@@ -421,15 +437,36 @@ function login(event) {
   toast("Bismillah. Mari bangun hari yang lebih baik.");
 }
 
+function togglePasswordVisibility(id) {
+  const input = document.querySelector(`#${id}`);
+  if (!input) return;
+  input.type = input.type === "password" ? "text" : "password";
+}
+
+function recoverPassword() {
+  const email = document.querySelector("#email")?.value?.trim();
+  if (!email) {
+    toast("Masukkan email terlebih dahulu untuk menerima instruksi pemulihan.");
+    return;
+  }
+  syncWithGoogleWorkspace("password_recovery_requested", {
+    email,
+    requestedAt: new Date().toISOString(),
+    message: "Kirim instruksi pemulihan password atau kode verifikasi ke email pengguna."
+  });
+  toast(`Instruksi pemulihan password dikirim ke ${email}.`);
+}
+
 function completeOnboarding(event) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
-  state.vision = form.get("vision") || state.vision;
+  state.vision = form.get("vision")?.trim() || "";
   state.selectedAreas = form.getAll("lifeAreas");
   if (!state.selectedAreas.length) state.selectedAreas = [form.get("area") || "Ibadah & Spiritual"];
-  const goalName = form.get("goalName");
-  const systemName = form.get("systemName");
-  const habitName = form.get("habitName");
+  const goalName = form.get("goalName")?.trim();
+  const systemName = form.get("systemName")?.trim();
+  const habitName = form.get("habitName")?.trim();
+  const schedule = form.get("schedule") || "Daily";
 
   if (goalName) {
     const goalId = `goal-${Date.now()}`;
@@ -437,8 +474,8 @@ function completeOnboarding(event) {
     state.goals.unshift({
       id: goalId,
       name: goalName,
-      area: form.get("area") || "Akhlak & Pengembangan Diri",
-      why: form.get("why") || "Tujuan yang bermakna untuk bertumbuh dan bermanfaat.",
+      area: form.get("area") || state.selectedAreas[0] || "Ibadah & Spiritual",
+      why: form.get("why")?.trim() || "Tujuan pribadi yang kamu tetapkan sendiri.",
       target: 100,
       current: 10,
       unit: "%",
@@ -454,13 +491,13 @@ function completeOnboarding(event) {
     });
     state.habits.unshift({
       id: `habit-${Date.now()}`,
-      name: habitName || "Daily Action",
-      area: form.get("area") || "Akhlak & Pengembangan Diri",
+      name: habitName || "Aksi utama harian",
+      area: form.get("area") || state.selectedAreas[0] || "Ibadah & Spiritual",
       goalId,
       systemId,
       time: "Morning",
       streak: 0,
-      target: "Daily",
+      target: schedule,
       completed: false
     });
   }
@@ -469,7 +506,7 @@ function completeOnboarding(event) {
   state.route = "dashboard";
   saveState();
   render();
-  toast("Alhamdulillah, sistem pertama Anda sudah siap.");
+  toast("Alhamdulillah, sistem pertama kamu sudah siap.");
 }
 
 function toggleHabit(id) {
@@ -557,13 +594,6 @@ const quickAddConfig = {
     fieldLabel: "Catatan profil",
     placeholder: "Contoh: Fokus utama bulan ini adalah kesehatan dan ibadah",
     helper: "Catat preferensi, identitas pertumbuhan, atau fokus pribadi."
-  },
-  Settings: {
-    label: "Pengaturan",
-    title: "Pengaturan Baru",
-    fieldLabel: "Nama pengaturan",
-    placeholder: "Contoh: Aktifkan pengingat muhasabah malam",
-    helper: "Catat pengaturan atau preferensi yang ingin diterapkan."
   }
 };
 
@@ -607,7 +637,7 @@ function submitQuickAdd(event, type) {
     state.goals.unshift({
       id: `goal-${Date.now()}`,
       name,
-      area: "Akhlak & Pengembangan Diri",
+      area: primaryArea(),
       why: "Dibuat dari Quick Add.",
       target: 100,
       current: 0,
@@ -629,7 +659,7 @@ function submitQuickAdd(event, type) {
     state.habits.unshift({
       id: `habit-${Date.now()}`,
       name,
-      area: "Akhlak & Pengembangan Diri",
+      area: primaryArea(),
       goalId: state.goals[0]?.id || "goal-health",
       systemId: state.systems[0]?.id || "system-health",
       time: "Morning",
@@ -641,7 +671,7 @@ function submitQuickAdd(event, type) {
   if (type === "Impact") {
     state.impacts.unshift({
       title: name,
-      area: state.selectedAreas?.[0] || "Akhlak & Pengembangan Diri",
+      area: primaryArea(),
       evidence: `Ditambahkan manual oleh ${userDisplayName()} dari Quick Add.`,
       result: "Pantau apakah dampak ini berulang setelah habit dijaga beberapa hari."
     });
@@ -683,12 +713,6 @@ function submitQuickAdd(event, type) {
   if (type === "Profile") {
     state.profileNote = name;
   }
-  if (type === "Settings") {
-    state.settingsNotes.unshift({
-      title: name,
-      detail: `Preferensi dicatat oleh ${userDisplayName()} dan bisa dijadikan pengaturan teknis berikutnya.`
-    });
-  }
   closeQuickAdd();
   saveState();
   render();
@@ -696,7 +720,7 @@ function submitQuickAdd(event, type) {
 }
 
 function addActivity(time) {
-  const selected = state.selectedAreas?.[0] || "Ibadah & Spiritual";
+  const selected = primaryArea();
   const name = prompt(`Aktivitas ${timeLabel(time)} yang ingin ditambahkan`);
   if (!name) return;
   state.habits.unshift({
@@ -754,6 +778,18 @@ function applySuggestion(time, area, name) {
   toast(`${name} ditambahkan ke aktivitas ${timeLabel(time)}.`);
 }
 
+function suggestionKey(time, area, name) {
+  return `${time}|${area}|${name}`;
+}
+
+function deleteSuggestion(time, area, name) {
+  const key = suggestionKey(time, area, name);
+  if (!state.hiddenSuggestions.includes(key)) state.hiddenSuggestions.push(key);
+  saveState();
+  render();
+  toast(`Pilihan "${name}" disembunyikan dari ${timeLabel(time)}.`);
+}
+
 function authView(mode = "login") {
   const isRegister = mode === "register";
   return `
@@ -767,11 +803,10 @@ function authView(mode = "login") {
           </div>
         </div>
         <div class="brand-statement">
-          <h1>Personal Growth Operating System</h1>
           <p>Bantu diri bertumbuh dengan niat yang benar, sistem yang rapi, kebiasaan baik, amal harian, muhasabah, dan perbaikan berkelanjutan.</p>
         </div>
         <div>
-          <p class="muted">BANGUN → CATAT → UKUR → MUHASABAH → PERBAIKI</p>
+          <p class="growth-chain">BANGUN → CATAT → UKUR → MUHASABAH → PERBAIKI</p>
           <p class="developer-credit">Developed by Markaz Dakwah Digital</p>
         </div>
       </section>
@@ -779,19 +814,22 @@ function authView(mode = "login") {
         <h2>${isRegister ? "Buat akun baru" : "Assalamu'alaikum"}</h2>
         <p class="muted">${isRegister ? "Mulai dari satu tujuan yang bermakna." : "Lanjutkan ikhtiar kecil hari ini dengan lebih tertata."}</p>
         <form onsubmit="login(event)">
-          ${isRegister ? '<div class="field"><label for="name">Full name</label><input id="name" name="name" required value="Abu Adzka"></div>' : ""}
+          ${isRegister ? '<div class="field"><label for="name">Nama lengkap</label><input id="name" name="name" required autocomplete="name"></div>' : ""}
           <div class="field">
             <label for="email">Email</label>
-            <input id="email" name="email" type="email" required value="friendsindonesia28@gmail.com">
+            <input id="email" name="email" type="email" required autocomplete="email">
           </div>
           <div class="field">
             <label for="password">Password</label>
-            <input id="password" name="password" type="password" required value="betterhabits">
+            <div class="password-field">
+              <input id="password" name="password" type="password" required autocomplete="${isRegister ? "new-password" : "current-password"}">
+              <button class="eye-button" type="button" onclick="togglePasswordVisibility('password')" aria-label="Tampilkan atau sembunyikan password">👁</button>
+            </div>
           </div>
-          ${isRegister ? '<div class="field"><label for="confirm">Confirm password</label><input id="confirm" type="password" required value="betterhabits"></div>' : ""}
+          ${isRegister ? '<div class="field"><label for="confirm">Konfirmasi password</label><div class="password-field"><input id="confirm" type="password" required autocomplete="new-password"><button class="eye-button" type="button" onclick="togglePasswordVisibility(\'confirm\')" aria-label="Tampilkan atau sembunyikan konfirmasi password">👁</button></div></div>' : ""}
           <div class="row-between">
             <label class="check-row"><input type="checkbox" checked> Ingat saya</label>
-            <button class="link-button" type="button" onclick="toast('Pemulihan password siap dihubungkan ke backend.')">Lupa password</button>
+            <button class="link-button" type="button" onclick="recoverPassword()">Lupa password</button>
           </div>
           <button class="btn primary full" type="submit">${isRegister ? "Daftar" : "Masuk"}</button>
         </form>
@@ -835,17 +873,17 @@ function onboardingView() {
           <select name="area">${lifeAreas.map((area) => `<option>${area}</option>`).join("")}</select>
         </div>
         <div class="field">
-          <label>Apa kehidupan yang ingin Anda bangun?</label>
-          <textarea name="vision">${state.vision}</textarea>
+          <label>Apa kehidupan yang ingin kamu bangun?</label>
+          <textarea name="vision" placeholder="Tulis dengan bebas, misalnya arah hidup, niat, atau perubahan yang kamu inginkan."></textarea>
         </div>
         <div class="grid three-grid">
           <div class="field">
             <label>Nama Tujuan</label>
-            <input name="goalName" value="Menjaga Kesehatan sebagai Amanah" required>
+            <input name="goalName" placeholder="Tulis tujuanmu">
           </div>
           <div class="field">
             <label>Mengapa Ini Penting</label>
-            <input name="why" value="Agar lebih kuat beribadah, bekerja, dan bermanfaat." required>
+            <input name="why" placeholder="Tulis alasan utamanya">
           </div>
           <div class="field">
             <label>Deadline</label>
@@ -855,15 +893,15 @@ function onboardingView() {
         <div class="grid three-grid">
           <div class="field">
             <label>System</label>
-            <input name="systemName" value="Sistem Hidup Sehat" required>
+            <input name="systemName" placeholder="Tulis nama sistem">
           </div>
           <div class="field">
-            <label>Kebiasaan Pertama</label>
-            <input name="habitName" value="Jalan Kaki 30 Menit" required>
+            <label>Kebiasaan pertama & utama yang ingin dibangun</label>
+            <input name="habitName" placeholder="Tulis kebiasaan utama">
           </div>
           <div class="field">
             <label>Schedule</label>
-            <select name="schedule"><option>Daily</option><option>Weekdays</option><option>Specific Days</option><option>Weekly</option></select>
+            <select name="schedule" required><option>Daily</option><option>Weekdays</option><option>Specific Days</option><option>Weekly</option></select>
           </div>
         </div>
         <div class="row-between">
@@ -896,18 +934,8 @@ function shell(content) {
         ${content}
       </section>
       <nav class="mobile-nav" aria-label="Mobile navigation">
-        ${[
-          ["dashboard", "Home"],
-          ["today", "Hari Ini"],
-          ["quick", "+"],
-          ["progress", "Progress"],
-          ["profile", "Profil"]
-        ]
-          .map(([id, label]) =>
-            id === "quick"
-              ? `<button class="add-button" onclick="addQuick('Habit')" aria-label="Quick add">${label}</button>`
-              : `<button class="${state.route === id ? "active" : ""}" onclick="navigate('${id}')">${label}</button>`
-          )
+        ${navItems
+          .map(([id, label]) => `<button class="${state.route === id ? "active" : ""}" onclick="navigate('${id}')">${label}</button>`)
           .join("")}
       </nav>
     </main>
@@ -945,7 +973,6 @@ function dashboardView() {
           <h2>Smart Scoring Analytics</h2>
           <p class="muted">Histogram, line chart, pie 3D, dan tabel skor langsung menjelaskan progres hari ini.</p>
         </div>
-        <span class="badge badge-3d">3D Glow Active</span>
       </div>
       ${smartArt(score.score)}
       <div class="analytics-grid">
@@ -970,7 +997,7 @@ function dashboardView() {
       </section>
       <section class="panel insight-panel-3d">
         <h2>Insight Hari Ini</h2>
-        <p class="muted">Anda lebih konsisten menyelesaikan kebiasaan penting setelah niat dan rencana pagi.</p>
+        <p class="muted">Kamu lebih konsisten menyelesaikan kebiasaan penting setelah niat dan rencana pagi.</p>
         <div class="heatmap" aria-label="Monthly consistency heatmap">
           ${Array.from({ length: 42 }, (_, index) => `<span class="heat-cell level-${(index + score.completed) % 4}"></span>`).join("")}
         </div>
@@ -987,7 +1014,6 @@ function dashboardView() {
           <h2>Tabel Scoring 3D</h2>
           <p class="muted">Ringkasan formula scoring yang dipakai aplikasi.</p>
         </div>
-        <span class="badge badge-3d">Glossy Table</span>
       </div>
       ${scoreTable3d(score)}
     </section>
@@ -1071,19 +1097,28 @@ function todayView() {
 
 function suggestionList(time) {
   const areas = state.selectedAreas?.length ? state.selectedAreas : ["Ibadah & Spiritual"];
+  const hidden = new Set(state.hiddenSuggestions || []);
   return `
     <div class="suggestion-box">
       <p class="muted">Pilihan sesuai Life Area:</p>
       ${areas
         .flatMap((area) => (activitySuggestions[area]?.[time] || []).slice(0, 3).map((name) => ({ area, name })))
+        .filter(({ area, name }) => !hidden.has(suggestionKey(time, area, name)))
         .slice(0, 6)
         .map(
-          ({ area, name }) => `
-          <button class="suggestion-pill" onclick="applySuggestion('${time}', '${area}', '${name.replace(/'/g, "\\'")}')">
-            <span>${name}</span>
-            <small>${area}</small>
-          </button>
+          ({ area, name }) => {
+            const safeArea = area.replace(/'/g, "\\'");
+            const safeName = name.replace(/'/g, "\\'");
+            return `
+          <div class="suggestion-pill suggestion-item">
+            <button class="suggestion-add" onclick="applySuggestion('${time}', '${safeArea}', '${safeName}')">
+              <span>${escapeHtml(name)}</span>
+              <small>${escapeHtml(area)}</small>
+            </button>
+            <button class="trash-button" onclick="deleteSuggestion('${time}', '${safeArea}', '${safeName}')" aria-label="Hapus pilihan ${escapeHtml(name)}">🗑</button>
+          </div>
         `
+          }
         )
         .join("")}
     </div>
@@ -1457,33 +1492,6 @@ function profileView() {
   `);
 }
 
-function settingsView() {
-  return shell(`
-    ${moduleHero("Pengaturan", "Kontrol preferensi aplikasi: backend, PWA, sinkronisasi, data, dan catatan pengaturan.", "Settings", "Kontrol Aplikasi")}
-    <section class="panel module-section" style="margin-top:1rem">
-      <h2>Status Sistem</h2>
-      <div class="score-table-3d" role="table" aria-label="Status pengaturan aplikasi">
-        <div role="row" class="score-table-head"><span>Fitur</span><span>Status</span><span>Keterangan</span></div>
-        <div role="row" class="score-table-row"><span>Google Workspace</span><strong>Aktif</strong><span>${escapeHtml(appConfig.workspaceAccount || "friendsindonesia28@gmail.com")}</span></div>
-        <div role="row" class="score-table-row"><span>Apps Script Backend</span><strong>Terhubung</strong><span>${appConfig.googleAppsScriptUrl ? "URL backend sudah terpasang" : "Belum ada URL backend"}</span></div>
-        <div role="row" class="score-table-row"><span>GitHub Pages PWA</span><strong>Aktif</strong><span>Branch main, folder root</span></div>
-      </div>
-      <div class="module-grid" style="margin-top:1rem">
-        ${state.settingsNotes
-          .map(
-            (item) => `
-            <article class="module-card glossy-card">
-              <h3>${escapeHtml(item.title)}</h3>
-              <p class="muted">${escapeHtml(item.detail)}</p>
-            </article>
-          `
-          )
-          .join("")}
-      </div>
-    </section>
-  `);
-}
-
 function render() {
   const app = document.querySelector("#app");
   if (state.route === "login") app.innerHTML = authView("login");
@@ -1501,11 +1509,13 @@ function render() {
   else if (state.route === "achievements") app.innerHTML = achievementsView();
   else if (state.route === "insights") app.innerHTML = insightsView();
   else if (state.route === "profile") app.innerHTML = profileView();
-  else if (state.route === "settings") app.innerHTML = settingsView();
+  else app.innerHTML = dashboardView();
 }
 
 window.navigate = navigate;
 window.login = login;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.recoverPassword = recoverPassword;
 window.completeOnboarding = completeOnboarding;
 window.toggleHabit = toggleHabit;
 window.addQuick = addQuick;
@@ -1513,6 +1523,7 @@ window.submitQuickAdd = submitQuickAdd;
 window.closeQuickAdd = closeQuickAdd;
 window.addActivity = addActivity;
 window.applySuggestion = applySuggestion;
+window.deleteSuggestion = deleteSuggestion;
 window.triggerAvatarUpload = triggerAvatarUpload;
 window.uploadAvatar = uploadAvatar;
 
